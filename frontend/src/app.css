@@ -1,0 +1,215 @@
+@import 'tailwindcss';
+@import '@skeletonlabs/skeleton';
+@import '@skeletonlabs/skeleton/themes/cerberus';
+
+@theme {
+	--font-family-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+	--color-primary: #6366f1;
+	--color-primary-50: #eef2ff;
+	--color-primary-100: #e0e7ff;
+	--color-primary-200: #c7d2fe;
+	--color-primary-500: #6366f1;
+	--color-primary-600: #4f46e5;
+	--color-primary-700: #4338ca;
+	--color-success: #22c55e;
+	--color-warning: #f59e0b;
+	--color-danger: #ef4444;
+	--color-info: #3b82f6;
+}
+
+:root {
+	--qp-bg: #0f1117;
+	--qp-surface: #1a1d2e;
+	--qp-surface-2: #242842;
+	--qp-border: #2e3348;
+	--qp-text: #e2e8f0;
+	--qp-text-muted: #94a3b8;
+	--qp-accent: #6366f1;
+	--qp-accent-hover: #818cf8;
+}
+
+body {
+	font-family: 'Inter', system-ui, -apple-system, sans-serif;
+	background-color: var(--qp-bg);
+	color: var(--qp-text);
+}
+
+.font-mono {
+	font-family: var(--font-family-mono);
+}
+
+.qp-card {
+	background: var(--qp-surface);
+	border: 1px solid var(--qp-border);
+	border-radius: 0.75rem;
+	padding: 1.25rem;
+}
+
+.qp-card:hover {
+	border-color: var(--qp-accent);
+}
+
+.qp-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.125rem 0.5rem;
+	border-radius: 9999px;
+	font-size: 0.75rem;
+	font-weight: 500;
+}
+
+.qp-badge-success {
+	background: rgba(34, 197, 94, 0.15);
+	color: #22c55e;
+}
+
+.qp-badge-danger {
+	background: rgba(239, 68, 68, 0.15);
+	color: #ef4444;
+}
+
+.qp-badge-warning {
+	background: rgba(245, 158, 11, 0.15);
+	color: #f59e0b;
+}
+
+.qp-badge-info {
+	background: rgba(59, 130, 246, 0.15);
+	color: #3b82f6;
+}
+
+.qp-badge-neutral {
+	background: rgba(148, 163, 184, 0.15);
+	color: #94a3b8;
+}
+
+.qp-scrollbar::-webkit-scrollbar {
+	width: 6px;
+}
+
+.qp-scrollbar::-webkit-scrollbar-track {
+	background: var(--qp-surface);
+}
+
+.qp-scrollbar::-webkit-scrollbar-thumb {
+	background: var(--qp-border);
+	border-radius: 3px;
+}
+
+.log-viewer {
+	background: #0d0f18;
+	border: 1px solid var(--qp-border);
+	border-radius: 0.5rem;
+	font-family: var(--font-family-mono);
+	font-size: 0.8125rem;
+	line-height: 1.6;
+	padding: 1rem;
+	overflow-y: auto;
+	max-height: 70vh;
+}
+
+.log-line {
+	padding: 0.125rem 0;
+}
+
+.log-line:hover {
+	background: rgba(99, 102, 241, 0.08);
+}
+
+.qp-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.5rem 1rem;
+	border-radius: 0.5rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	transition: all 0.15s ease;
+	cursor: pointer;
+	border: 1px solid transparent;
+}
+
+.qp-btn-primary {
+	background: var(--qp-accent);
+	color: white;
+}
+
+.qp-btn-primary:hover {
+	background: var(--qp-accent-hover);
+}
+
+.qp-btn-ghost {
+	background: transparent;
+	color: var(--qp-text-muted);
+	border-color: var(--qp-border);
+}
+
+.qp-btn-ghost:hover {
+	background: var(--qp-surface-2);
+	color: var(--qp-text);
+}
+
+.qp-btn-danger {
+	background: rgba(239, 68, 68, 0.15);
+	color: #ef4444;
+	border-color: rgba(239, 68, 68, 0.3);
+}
+
+.qp-btn-danger:hover {
+	background: rgba(239, 68, 68, 0.25);
+}
+
+.qp-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	pointer-events: none;
+}
+
+.qp-btn:focus-visible {
+	outline: 2px solid var(--qp-accent);
+	outline-offset: 2px;
+}
+
+.qp-input:focus-visible {
+	outline: 2px solid var(--qp-accent);
+	outline-offset: 2px;
+}
+
+.qp-input {
+	background: var(--qp-surface);
+	border: 1px solid var(--qp-border);
+	border-radius: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	color: var(--qp-text);
+	font-size: 0.875rem;
+	width: 100%;
+	outline: none;
+	transition: border-color 0.15s ease;
+}
+
+.qp-input:focus {
+	border-color: var(--qp-accent);
+}
+
+.qp-input::placeholder {
+	color: var(--qp-text-muted);
+}
+
+@keyframes pulse-dot {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.4; }
+}
+
+.pulse-dot {
+	animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+	from { opacity: 0; transform: translateY(4px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+	animation: fade-in 0.2s ease-out;
+}

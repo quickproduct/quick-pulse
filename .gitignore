@@ -1,0 +1,176 @@
+# ============================================================================
+# QuickPulse .gitignore - Comprehensive Configuration
+# ============================================================================
+# This file prevents sensitive data, build artifacts, and dependencies
+# from being committed to version control.
+
+# ── Environment & Secrets ──────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+
+# ── Python / Backend ───────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+.pytype/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.venv/
+venv/
+env/
+ENV/
+pipenv/
+
+# ── Node.js / Frontend ─────────────────────────────────────────────────────
+node_modules/
+npm-debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.pnp
+.pnp.js
+dist/
+build/
+.svelte-kit/
+.env
+.env.*.local
+
+# ── SvelteKit Specific ─────────────────────────────────────────────────────
+.vercel/
+.netlify/
+
+# ── IDE & Editor ───────────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+.vscode-server/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project
+.history/
+.vs/
+.vscode-test/
+.vim/
+.emacs.d/
+
+# ── Docker & Container Related ─────────────────────────────────────────────
+docker-compose.override.yml
+.dockerignore
+
+# ── Logs & Temporary Files ────────────────────────────────────────────────
+logs/
+*.log
+*.log.*
+tmp/
+temp/
+.tmp/
+
+# ── Database & Cache ──────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+pgdump.sql
+redis-dump.rdb
+
+# ── OS-specific ───────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ── Generated Files ───────────────────────────────────────────────────────
+.cache/
+.parcel-cache
+dist-ssr/
+*.local
+.vite/
+
+# ── Testing & Coverage ────────────────────────────────────────────────────
+.nyc_output/
+coverage/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# ── IDEs - Code Intelligence ──────────────────────────────────────────────
+.langservers/
+
+# ── Alembic (Database Migrations) ──────────────────────────────────────────
+alembic/versions/__pycache__/
+
+# ── CI/CD ──────────────────────────────────────────────────────────────────
+.github/workflows/*.local
+.gitlab-ci.local
+
+# ── Package Manager Lock Files (Optional - uncomment if desired) ────────────
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# ── MCP (Model Context Protocol) Related ───────────────────────────────────
+mcp/.env
+mcp/.env.*
+
+# ── Session & State Files ──────────────────────────────────────────────────
+.session
+session.*
+state/
+.copilot/
+
+# ── Miscellaneous ──────────────────────────────────────────────────────────
+*.orig
+*.bak
+*.backup
+*.swp
+*.swo
+*~
+.tern-port
