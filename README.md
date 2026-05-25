@@ -4,7 +4,7 @@ A lightweight, self-hosted Docker and VPS control panel for developers.
 
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![Svelte](https://img.shields.io/badge/Svelte-FF3E00?style=for-the-badge&logo=svelte&logoColor=white)](https://svelte.dev/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://go.dev/)
 
 ## 🚀 Quick Start
 
@@ -40,11 +40,11 @@ For comprehensive information, including non-technical overviews, technical arch
 
 ## 🏗 Project Structure
 
-- `backend/`: FastAPI application
+- `backend/`: Go backend application (serves APIs and hosts embedded static frontend)
 - `frontend/`: SvelteKit user interface
 - `docs/`: Centralized documentation
-- `mcp/`: AI Agent integration
-- `docker-compose.yml`: Consolidated deployment config
+- `mcp/`: AI Agent integration (Model Context Protocol server)
+- `docker-compose.yml`: Consolidated single-container deployment configuration
 
 ---
 

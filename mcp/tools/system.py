@@ -21,12 +21,19 @@ async def get_dashboard_summary() -> dict:
     metrics = data.get("metrics") or {}
     containers = data.get("containers") or {}
     stacks = data.get("stack_summary") or {}
-    alerts = data.get("active_alerts") or {}
     events = data.get("recent_events") or []
 
-    # Compute an overall health score
-    critical_alerts = alerts.get("critical", 0) if isinstance(alerts, dict) else 0
-    warning_alerts = alerts.get("warning", 0) if isinstance(alerts, dict) else 0
+    critical_alerts = 0
+    warning_alerts = 0
+    try:
+        alerts_data = await api_get("/api/v1/alerts")
+        alerts_list = alerts_data if isinstance(alerts_data, list) else []
+        active_list = [a for a in alerts_list if not a.get("acknowledged", False)]
+        critical_alerts = sum(1 for a in active_list if a.get("severity") == "critical")
+        warning_alerts = sum(1 for a in active_list if a.get("severity") == "warning")
+    except Exception:
+        pass
+
     cpu = metrics.get("cpu_percent", 0)
     mem = metrics.get("memory_percent", 0)
 

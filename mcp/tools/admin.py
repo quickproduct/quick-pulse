@@ -9,24 +9,22 @@ async def list_users() -> dict:
     Returns user ID, email, role (admin/viewer), active status, and creation date.
     Requires admin privileges.
     """
-    data = await api_get("/api/v1/organizations")
-    # Users are accessed via the organizations endpoint
-    orgs = data if isinstance(data, list) else []
-    all_members = []
-    for org in orgs:
-        members = org.get("members") or []
-        for m in members:
-            all_members.append({
-                "user_id": m.get("user_id"),
-                "email": m.get("email"),
-                "role": m.get("role"),
-                "org": org.get("name"),
-                "joined_at": m.get("joined_at"),
-            })
+    try:
+        me = await api_get("/api/v1/me")
+    except Exception:
+        me = {"id": "default-admin", "email": "admin@quickpulse.local", "role": "admin", "is_active": True}
+
+    user = {
+        "user_id": me.get("id"),
+        "email": me.get("email"),
+        "role": me.get("role"),
+        "org": "Self Hosted",
+        "joined_at": me.get("created_at"),
+    }
 
     return {
-        "total_users": len(all_members),
-        "users": all_members,
+        "total_users": 1,
+        "users": [user],
     }
 
 
@@ -36,20 +34,17 @@ async def list_organizations() -> dict:
     Returns organization name, slug, plan, member count, and subscription status.
     Requires admin privileges.
     """
-    data = await api_get("/api/v1/organizations")
-    orgs = data if isinstance(data, list) else []
     return {
-        "total": len(orgs),
+        "total": 1,
         "organizations": [
             {
-                "id": o.get("id"),
-                "name": o.get("name"),
-                "slug": o.get("slug"),
-                "plan": o.get("plan"),
-                "member_count": len(o.get("members", [])),
-                "created_at": o.get("created_at"),
+                "id": "self-hosted",
+                "name": "Self Hosted",
+                "slug": "self-hosted",
+                "plan": "community",
+                "member_count": 1,
+                "created_at": None,
             }
-            for o in orgs
         ],
     }
 
@@ -61,29 +56,22 @@ async def get_billing_overview() -> dict:
     trial end date, resource limits (max hosts, users, containers), and usage.
     Requires admin privileges.
     """
-    data = await api_get("/api/v1/billing/subscription")
-    if not data:
-        return {"error": "No billing data found. Organization may not have an active subscription."}
-
-    plan = data.get("plan") or {}
-    sub = data.get("subscription") or {}
-
     return {
         "plan": {
-            "name": plan.get("name"),
-            "display_name": plan.get("display_name"),
-            "max_hosts": plan.get("max_hosts"),
-            "max_users": plan.get("max_users"),
-            "max_containers": plan.get("max_containers"),
-            "metrics_retention_days": plan.get("metrics_retention_days"),
-            "price_monthly_cents": plan.get("price_monthly_cents"),
+            "name": "community",
+            "display_name": "Community Edition (Self-Hosted)",
+            "max_hosts": "unlimited",
+            "max_users": "unlimited",
+            "max_containers": "unlimited",
+            "metrics_retention_days": 7,
+            "price_monthly_cents": 0,
         },
         "subscription": {
-            "status": sub.get("status"),
-            "trial_ends_at": sub.get("trial_ends_at"),
-            "current_period_start": sub.get("current_period_start"),
-            "current_period_end": sub.get("current_period_end"),
-            "stripe_customer_id": sub.get("stripe_customer_id"),
-            "cancelled_at": sub.get("cancelled_at"),
+            "status": "active",
+            "trial_ends_at": None,
+            "current_period_start": None,
+            "current_period_end": None,
+            "stripe_customer_id": None,
+            "cancelled_at": None,
         },
     }

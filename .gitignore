@@ -53,6 +53,11 @@ env/
 ENV/
 pipenv/
 
+# ── Go Backend ─────────────────────────────────────────────────────────────
+backend/qp-backend
+qp-backend
+qp-backend-*
+
 # ── Node.js / Frontend ─────────────────────────────────────────────────────
 node_modules/
 npm-debug.log

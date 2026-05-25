@@ -41,14 +41,10 @@ ps:
 	@$(COMPOSE) ps
 
 migrate:
-	@echo "🔄 Running migrations..."
-	@$(COMPOSE) exec backend alembic upgrade head
-	@echo "✅ Migrations complete"
+	@echo "🔄 Migrations are run automatically by the Go binary on startup."
 
 seed:
-	@echo "🌱 Seeding default admin..."
-	@$(COMPOSE) exec backend python -m app.initial_data
-	@echo "✅ Seeding complete"
+	@echo "🌱 Seeding is handled automatically by the Go binary on startup."
 
 clean:
 	@echo "🧹 Cleaning up..."
@@ -56,7 +52,9 @@ clean:
 	@echo "✅ Cleanup complete"
 
 test:
-	@$(COMPOSE) exec backend pytest
+	@echo "🧪 Running backend unit tests..."
+	cd backend && go test ./...
 
 lint:
-	@$(COMPOSE) exec backend ruff check .
+	@echo "🔍 Running Go vet and fmt checks..."
+	cd backend && go vet ./... && go fmt ./...

@@ -11,7 +11,7 @@ async def get_current_metrics() -> dict:
     system load averages (1m/5m/15m), process count, and uptime.
     Metrics are collected every 10 seconds by the metrics worker.
     """
-    data = await api_get("/api/v1/metrics/latest")
+    data = await api_get("/api/v1/metrics/summary")
     if not data:
         return {"error": "No metrics available yet. The metrics worker may still be initializing."}
 
