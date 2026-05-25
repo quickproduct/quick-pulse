@@ -93,7 +93,7 @@ func ListContainersHandler(w http.ResponseWriter, r *http.Request) {
 
 // InspectContainerHandler handles GET /api/v1/containers/{container_id}
 func InspectContainerHandler(w http.ResponseWriter, r *http.Request) {
-	containerID := r.PathValue("container_id")
+	containerID := r.PathValue("id")
 	if containerID == "" {
 		WriteError(w, http.StatusBadRequest, "Missing container ID")
 		return
@@ -117,48 +117,12 @@ func InspectContainerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Format ports
-	var ports interface{} = jsonInfo.NetworkSettings.Ports
-
-	name := strings.TrimPrefix(jsonInfo.Name, "/")
-
-	containerResp := models.ContainerResponse{
-		DockerID:   jsonInfo.ID[:12],
-		Name:       name,
-		Image:      jsonInfo.Config.Image,
-		Status:     normalizeStatus(jsonInfo.State.Status),
-		Ports:      ports,
-		State:      jsonInfo.State.Status,
-		StatusText: jsonInfo.State.Status,
-	}
-
-	// Empty / mock resource usage stats to keep frontend happy if it queries them
-	resourceUsage := map[string]interface{}{
-		"cpu_percent": 0.0,
-		"mem_percent": 0.0,
-		"mem_usage":   0,
-		"mem_limit":   0,
-	}
-
-	detail := models.ContainerDetailResponse{
-		ContainerResponse: containerResp,
-		Env:               jsonInfo.Config.Env,
-		NetworkSettings: map[string]interface{}{
-			"Networks": jsonInfo.NetworkSettings.Networks,
-		},
-		Mounts:        make([]interface{}, 0),
-		ResourceUsage: resourceUsage,
-	}
-	for _, m := range jsonInfo.Mounts {
-		detail.Mounts = append(detail.Mounts, m)
-	}
-
-	WriteJSON(w, http.StatusOK, detail)
+	WriteJSON(w, http.StatusOK, jsonInfo)
 }
 
 // StartContainerHandler handles POST /api/v1/containers/{container_id}/start
 func StartContainerHandler(w http.ResponseWriter, r *http.Request) {
-	containerID := r.PathValue("container_id")
+	containerID := r.PathValue("id")
 	if containerID == "" {
 		WriteError(w, http.StatusBadRequest, "Missing container ID")
 		return
@@ -191,7 +155,7 @@ func StartContainerHandler(w http.ResponseWriter, r *http.Request) {
 
 // StopContainerHandler handles POST /api/v1/containers/{container_id}/stop
 func StopContainerHandler(w http.ResponseWriter, r *http.Request) {
-	containerID := r.PathValue("container_id")
+	containerID := r.PathValue("id")
 	if containerID == "" {
 		WriteError(w, http.StatusBadRequest, "Missing container ID")
 		return
@@ -225,7 +189,7 @@ func StopContainerHandler(w http.ResponseWriter, r *http.Request) {
 
 // RestartContainerHandler handles POST /api/v1/containers/{container_id}/restart
 func RestartContainerHandler(w http.ResponseWriter, r *http.Request) {
-	containerID := r.PathValue("container_id")
+	containerID := r.PathValue("id")
 	if containerID == "" {
 		WriteError(w, http.StatusBadRequest, "Missing container ID")
 		return
@@ -258,7 +222,7 @@ func RestartContainerHandler(w http.ResponseWriter, r *http.Request) {
 
 // GetContainerLogsHandler handles GET /api/v1/containers/{container_id}/logs
 func GetContainerLogsHandler(w http.ResponseWriter, r *http.Request) {
-	containerID := r.PathValue("container_id")
+	containerID := r.PathValue("id")
 	if containerID == "" {
 		WriteError(w, http.StatusBadRequest, "Missing container ID")
 		return

@@ -2,6 +2,7 @@ package workers
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -267,3 +268,132 @@ func evaluateAlertRules(metrics models.MetricSnapshot) {
 		}
 	}
 }
+
+// StartMetricsJanitorWorker starts a background loop to prune and downsample metrics.
+func StartMetricsJanitorWorker() {
+	log.Println("Starting metrics janitor worker...")
+	go func() {
+		// Run on startup, then every 12 hours
+		for {
+			log.Println("Metrics janitor: running downsampling and cleanup...")
+			if err := runMetricsJanitor(); err != nil {
+				log.Printf("Metrics janitor error: %v", err)
+			}
+			time.Sleep(12 * time.Hour)
+		}
+	}()
+}
+
+func runMetricsJanitor() error {
+	// 1. Delete metrics older than 30 days
+	_, err := db.DB.Exec("DELETE FROM host_metrics WHERE time < datetime('now', '-30 days')")
+	if err != nil {
+		return fmt.Errorf("failed to prune old metrics: %w", err)
+	}
+
+	// 2. Downsample metrics older than 24 hours (group by hour and host_id)
+	rows, err := db.DB.Query(`
+		SELECT strftime('%Y-%m-%d %H:00:00', time) as hour_bucket, host_id
+		FROM host_metrics
+		WHERE time < datetime('now', '-24 hours')
+		GROUP BY hour_bucket, host_id
+		HAVING count(*) > 1
+	`)
+	if err != nil {
+		return fmt.Errorf("failed to query raw metrics for downsampling: %w", err)
+	}
+	defer rows.Close()
+
+	type downsampleTarget struct {
+		hourBucket string
+		hostID     string
+	}
+	var targets []downsampleTarget
+	for rows.Next() {
+		var t downsampleTarget
+		if err := rows.Scan(&t.hourBucket, &t.hostID); err != nil {
+			log.Printf("Metrics janitor: error scanning row: %v", err)
+			continue
+		}
+		targets = append(targets, t)
+	}
+
+	log.Printf("Metrics janitor: found %d hourly buckets to downsample", len(targets))
+
+	// Downsample each bucket sequentially in a transaction to minimize database locking
+	for _, target := range targets {
+		// Introduce a tiny pause to yield CPU and database locks to regular requests
+		time.Sleep(50 * time.Millisecond)
+
+		tx, err := db.DB.Begin()
+		if err != nil {
+			log.Printf("Metrics janitor: failed to begin transaction: %v", err)
+			continue
+		}
+
+		// Calculate averages for this host and hour
+		var avgCPU, avgMem, avgDisk, avgLoad1m, avgLoad5m, avgLoad15m float64
+		var avgMemUsed, avgMemTotal, avgDiskRead, avgDiskWrite, avgNetSent, avgNetRecv, avgProcesses, avgUptime float64
+		err = tx.QueryRow(`
+			SELECT 
+				AVG(cpu_percent), AVG(memory_percent), AVG(memory_used), AVG(memory_total),
+				AVG(disk_percent), AVG(disk_read_bytes), AVG(disk_write_bytes),
+				AVG(net_bytes_sent), AVG(net_bytes_recv),
+				AVG(load_1m), AVG(load_5m), AVG(load_15m),
+				AVG(process_count), AVG(uptime_seconds)
+			FROM host_metrics
+			WHERE host_id = ? AND time >= ? AND time < datetime(?, '+1 hour')
+		`, target.hostID, target.hourBucket, target.hourBucket).Scan(
+			&avgCPU, &avgMem, &avgMemUsed, &avgMemTotal,
+			&avgDisk, &avgDiskRead, &avgDiskWrite,
+			&avgNetSent, &avgNetRecv,
+			&avgLoad1m, &avgLoad5m, &avgLoad15m,
+			&avgProcesses, &avgUptime,
+		)
+		if err != nil {
+			tx.Rollback()
+			log.Printf("Metrics janitor: failed to calculate averages for %s (host %s): %v", target.hourBucket, target.hostID, err)
+			continue
+		}
+
+		// Delete high-resolution rows for this hour and host
+		_, err = tx.Exec(`
+			DELETE FROM host_metrics
+			WHERE host_id = ? AND time >= ? AND time < datetime(?, '+1 hour')
+		`, target.hostID, target.hourBucket, target.hourBucket)
+		if err != nil {
+			tx.Rollback()
+			log.Printf("Metrics janitor: failed to delete raw metrics for %s: %v", target.hourBucket, err)
+			continue
+		}
+
+		// Insert a single downsampled hourly metric row
+		_, err = tx.Exec(`
+			INSERT INTO host_metrics (
+				time, host_id, cpu_percent, memory_percent, memory_used, memory_total,
+				disk_percent, disk_read_bytes, disk_write_bytes, net_bytes_sent, net_bytes_recv,
+				load_1m, load_5m, load_15m, process_count, uptime_seconds
+			) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`, target.hourBucket, target.hostID, avgCPU, avgMem, int64(avgMemUsed), int64(avgMemTotal),
+			avgDisk, int64(avgDiskRead), int64(avgDiskWrite), int64(avgNetSent), int64(avgNetRecv),
+			avgLoad1m, avgLoad5m, avgLoad15m, int(avgProcesses), int(avgUptime))
+		if err != nil {
+			tx.Rollback()
+			log.Printf("Metrics janitor: failed to insert downsampled metrics for %s: %v", target.hourBucket, err)
+			continue
+		}
+
+		if err := tx.Commit(); err != nil {
+			log.Printf("Metrics janitor: failed to commit transaction: %v", err)
+		}
+	}
+
+	// 3. Run incremental vacuum to reclaim unused disk space safely
+	if _, err := db.DB.Exec("PRAGMA incremental_vacuum(50)"); err != nil {
+		log.Printf("Metrics janitor: warning: failed to run incremental vacuum: %v", err)
+	}
+
+	log.Println("Metrics janitor: cycle completed successfully")
+	return nil
+}
+

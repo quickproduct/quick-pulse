@@ -148,6 +148,8 @@ type StackResponse struct {
 	ProjectDir    string `json:"project_dir"`
 	Status        string `json:"status"`
 	ServicesCount int    `json:"services_count"`
+	Running       int    `json:"running"`
+	Total         int    `json:"total"`
 }
 
 // StackDetailResponse includes nested services details

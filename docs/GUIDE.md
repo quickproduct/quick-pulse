@@ -12,10 +12,11 @@ QuickPulse provides a centralized dashboard to keep track of your servers and co
 - **Real-time Monitoring**: Track CPU, Memory, Disk, and Network usage with live updates.
 - **Docker Management**: Start, stop, restart, and inspect containers directly from the UI.
 - **Live Logs**: Stream container logs in real-time with pause/resume functionality.
-- **Compose Support**: Manage Docker Compose stacks effortlessly.
+- **Compose Support**: Manage Docker Compose stacks and view precise service statuses.
+- **Kubernetes Integration**: Monitor active Kubernetes clusters (nodes, namespaces, pods, deployments, services, events) and stream live pod logs.
 - **Alerting**: Get notified when system metrics exceed your defined thresholds.
 - **Developer-First UI**: Clean, modern interface with dark mode and JWT-based security.
-- **AI Agent Integration (MCP)**: Exposes QuickPulse admin capabilities as Model Context Protocol (MCP) tools for AI assistants (like Cursor, Claude, etc.).
+- **AI Agent Integration (MCP)**: Exposes QuickPulse admin capabilities and Kubernetes operations as Model Context Protocol (MCP) tools for AI assistants (like Cursor, Claude, etc.).
 
 ---
 
@@ -24,11 +25,12 @@ QuickPulse provides a centralized dashboard to keep track of your servers and co
 QuickPulse is consolidated into a single Docker container containing a compiled Go application with embedded static frontend assets.
 
 ### Tech Stack:
-- **Backend**: Go (Single compiled binary, highly optimized memory footprint)
+- **Backend**: Go (Single compiled binary, utilizing `client-go` for Kubernetes interaction, highly optimized memory footprint)
 - **Database**: Embedded SQLite (Runs in WAL mode for concurrent, fast reads and writes with minimal memory overhead)
 - **Message Bus / WS Pub-Sub**: Replaced Redis with an in-memory thread-safe Go pub/sub hub.
 - **Frontend**: SvelteKit + Tailwind CSS (Embedded directly inside the Go binary using `go:embed` and served by Go's HTTP multiplexer)
 - **Infrastructure**: Built into a single container (`qp-app`), completely eliminating Nginx, PostgreSQL, and Redis containers.
+- **Kubernetes Connector**: Direct connection to any local or external cluster via kubeconfig configuration, with automatic mock fallback if unavailable.
 
 ---
 
@@ -91,16 +93,25 @@ QuickPulse relies on a single `docker-compose.yml` config file. Resource limits 
 - `GET /api/v1/containers`: List all Docker containers.
 - `GET /api/v1/metrics/summary`: Get current system metrics.
 - `GET /api/v1/dashboard`: Retrieve combined dashboard overview.
+- `GET /api/v1/kubernetes/summary`: Fetch high-level cluster resource counts.
+- `GET /api/v1/kubernetes/nodes`: Get active node details.
+- `GET /api/v1/kubernetes/pods`: List pods in cluster (filter by `namespace`).
+- `GET /api/v1/kubernetes/deployments`: List deployments.
+- `GET /api/v1/kubernetes/services`: List services.
+- `GET /api/v1/kubernetes/namespaces`: List namespaces.
+- `GET /api/v1/kubernetes/events`: Fetch cluster event history.
+- `GET /api/v1/kubernetes/pods/{namespace}/{pod_name}/logs`: Retrieve pod logs (supports `tail` query param).
 
 ### WebSocket Channels:
 - `/ws/metrics`: Live system metrics stream.
 - `/ws/logs/{container_id}`: Live log stream for a specific container.
 - `/ws/events`: Real-time Docker event feed.
+- `/ws/kubernetes/logs/{namespace}/{pod_name}`: Live pod log streaming.
 
 ---
 
 ## 6. AI Agent Integration (MCP)
 
 QuickPulse includes an integrated Model Context Protocol (MCP) server under `mcp/` written in Python. This allows models (like Claude or Cursor) to administer your VPS:
-- Exposes tools to list/manage containers, compose stacks, read logs, check alerts, and verify system metrics.
+- Exposes tools to list/manage containers, compose stacks, read logs, check alerts, verify system metrics, and inspect Kubernetes resources (nodes, pods, deployments, services, events, and pod logs).
 - Configuration: Set `QP_API_URL` (defaults to `http://localhost:8000`), `QP_ADMIN_EMAIL`, and `QP_ADMIN_PASSWORD` to authenticate MCP queries.

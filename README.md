@@ -31,12 +31,13 @@ For comprehensive information, including non-technical overviews, technical arch
 
 ## 🛠 Features
 
-- Real-time VPS & Docker monitoring
-- Container lifecycle management (Start/Stop/Restart)
-- Live container log streaming
-- Docker Compose stack support
+- Real-time VPS, Docker, & Kubernetes cluster monitoring
+- Container & Pod lifecycle management
+- Live container & Pod log streaming (with WebSockets)
+- Docker Compose stack support (accurate service counting)
 - Configurable alerts & metrics history
 - Dark mode & JWT security
+- Model Context Protocol (MCP) server for AI assistants
 
 ## 🏗 Project Structure
 

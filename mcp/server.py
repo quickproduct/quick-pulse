@@ -19,7 +19,7 @@ Usage (production):
 import os
 from fastmcp import FastMCP
 
-from mcp.tools import containers, stacks, metrics, alerts, events, system, admin
+from mcp.tools import containers, stacks, metrics, alerts, events, system, admin, kubernetes
 
 # ── Server Entrypoint ────────────────────────────────────────────────────────
 
@@ -81,6 +81,16 @@ mcp.tool(system.get_host_info)
 mcp.tool(admin.list_users)
 mcp.tool(admin.list_organizations)
 mcp.tool(admin.get_billing_overview)
+
+# Kubernetes — cluster monitoring, pods, deployments, services, logs
+mcp.tool(kubernetes.get_k8s_summary)
+mcp.tool(kubernetes.list_k8s_nodes)
+mcp.tool(kubernetes.list_k8s_pods)
+mcp.tool(kubernetes.list_k8s_deployments)
+mcp.tool(kubernetes.list_k8s_services)
+mcp.tool(kubernetes.list_k8s_namespaces)
+mcp.tool(kubernetes.list_k8s_events)
+mcp.tool(kubernetes.get_k8s_pod_logs)
 
 
 if __name__ == "__main__":

@@ -37,6 +37,11 @@ func InitDB() {
 		log.Printf("Warning: failed to enable WAL mode: %v", err)
 	}
 
+	// Set auto_vacuum to INCREMENTAL so empty pages can be released back to the OS
+	if _, err := DB.Exec("PRAGMA auto_vacuum = INCREMENTAL;"); err != nil {
+		log.Printf("Warning: failed to set auto_vacuum incremental mode: %v", err)
+	}
+
 	// Create tables
 	createTables()
 

@@ -43,6 +43,7 @@ func main() {
 	ws.Manager.StartHeartbeat()
 	workers.StartMetricsWorker()
 	workers.StartEventsWorker()
+	workers.StartMetricsJanitorWorker()
 
 	// 3. Define HTTP Mux with Go 1.22 routing enhancement
 	mux := http.NewServeMux()
@@ -81,10 +82,14 @@ func main() {
 
 	// --- Stacks API ---
 	mux.HandleFunc("GET /api/v1/stacks", handlers.AuthMiddleware(handlers.ListStacksHandler))
+	mux.HandleFunc("POST /api/v1/stacks", handlers.AuthMiddleware(handlers.CreateStackHandler))
 	mux.HandleFunc("GET /api/v1/stacks/{name}", handlers.AuthMiddleware(handlers.GetStackHandler))
 	mux.HandleFunc("POST /api/v1/stacks/{name}/start", handlers.AuthMiddleware(handlers.StartStackHandler))
 	mux.HandleFunc("POST /api/v1/stacks/{name}/stop", handlers.AuthMiddleware(handlers.StopStackHandler))
 	mux.HandleFunc("POST /api/v1/stacks/{name}/restart", handlers.AuthMiddleware(handlers.RestartStackHandler))
+	mux.HandleFunc("GET /api/v1/stacks/{name}/config", handlers.AuthMiddleware(handlers.GetStackConfigHandler))
+	mux.HandleFunc("POST /api/v1/stacks/{name}/config", handlers.AuthMiddleware(handlers.SaveStackConfigHandler))
+	mux.HandleFunc("POST /api/v1/stacks/{name}/deploy", handlers.AuthMiddleware(handlers.DeployStackHandler))
 
 	// --- Alerts API ---
 	mux.HandleFunc("GET /api/v1/alerts", handlers.AuthMiddleware(handlers.ListAlertsHandler))
@@ -95,19 +100,25 @@ func main() {
 	mux.HandleFunc("DELETE /api/v1/alert-rules/{id}", handlers.AuthMiddleware(handlers.DeleteRuleHandler))
 
 	// --- Kubernetes API ---
+	mux.HandleFunc("GET /api/v1/kubernetes/contexts", handlers.AuthMiddleware(handlers.K8sContextsHandler))
 	mux.HandleFunc("GET /api/v1/kubernetes/overview", handlers.AuthMiddleware(handlers.K8sOverviewHandler))
 	mux.HandleFunc("GET /api/v1/kubernetes/nodes", handlers.AuthMiddleware(handlers.K8sNodesHandler))
 	mux.HandleFunc("GET /api/v1/kubernetes/pods", handlers.AuthMiddleware(handlers.K8sPodsHandler))
+	mux.HandleFunc("DELETE /api/v1/kubernetes/pods/{namespace}/{name}", handlers.AuthMiddleware(handlers.DeletePodHandler))
 	mux.HandleFunc("GET /api/v1/kubernetes/deployments", handlers.AuthMiddleware(handlers.K8sDeploymentsHandler))
+	mux.HandleFunc("POST /api/v1/kubernetes/deployments/{namespace}/{name}/scale", handlers.AuthMiddleware(handlers.ScaleDeploymentHandler))
 	mux.HandleFunc("GET /api/v1/kubernetes/services", handlers.AuthMiddleware(handlers.K8sServicesHandler))
 	mux.HandleFunc("GET /api/v1/kubernetes/namespaces", handlers.AuthMiddleware(handlers.K8sNamespacesHandler))
 	mux.HandleFunc("GET /api/v1/kubernetes/events", handlers.AuthMiddleware(handlers.K8sEventsHandler))
+	mux.HandleFunc("GET /api/v1/kubernetes/pods/{namespace}/{pod_name}/logs", handlers.AuthMiddleware(handlers.GetK8sPodLogsHandler))
 
 	// --- WebSockets ---
 	mux.HandleFunc("GET /ws/metrics", handlers.HandleWSChannel("metrics"))
 	mux.HandleFunc("GET /ws/container-status", handlers.HandleWSChannel("container-status"))
 	mux.HandleFunc("GET /ws/events", handlers.HandleWSChannel("events"))
 	mux.HandleFunc("GET /ws/logs/{container_id}", handlers.HandleWSLogs)
+	mux.HandleFunc("GET /ws/kubernetes/logs/{namespace}/{pod_name}", handlers.HandleWSK8sLogs)
+	mux.HandleFunc("GET /ws/containers/{id}/terminal", handlers.HandleWSContainerTerminal)
 
 	// --- Static Frontend Files Embedded ---
 	fSys, err := fs.Sub(staticFS, "frontend/build")

@@ -3,12 +3,14 @@ package handlers
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"log"
 	"net/http"
 	"sync"
 
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/gorilla/websocket"
@@ -188,3 +190,126 @@ func HandleWSLogs(w http.ResponseWriter, r *http.Request) {
 		writer.mu.Unlock()
 	}
 }
+
+var terminalBufPool = sync.Pool{
+	New: func() interface{} {
+		return make([]byte, 4096)
+	},
+}
+
+// HandleWSContainerTerminal handles interactive shell sessions over WebSocket.
+func HandleWSContainerTerminal(w http.ResponseWriter, r *http.Request) {
+	containerID := r.PathValue("id")
+	if containerID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte("Missing container ID"))
+		return
+	}
+
+	_, ok := validateWSAuth(r)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		_, _ = w.Write([]byte("Unauthorized"))
+		return
+	}
+
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("Terminal WS upgrade failed: %v", err)
+		return
+	}
+	defer conn.Close()
+
+	cli, err := getDockerClient()
+	if err != nil {
+		_ = conn.WriteJSON(map[string]string{"error": "Docker daemon unavailable"})
+		return
+	}
+	defer cli.Close()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// 1. Create Exec configuration for shell
+	execCfg := types.ExecConfig{
+		AttachStdin:  true,
+		AttachStdout: true,
+		AttachStderr: true,
+		Tty:          true,
+		Cmd:          []string{"/bin/sh"},
+	}
+
+	execCreate, err := cli.ContainerExecCreate(ctx, containerID, execCfg)
+	if err != nil {
+		_ = conn.WriteJSON(map[string]string{"error": "Failed to create exec instance: " + err.Error()})
+		return
+	}
+
+	// 2. Attach to Exec instance (Hijacks the connection)
+	resp, err := cli.ContainerExecAttach(ctx, execCreate.ID, types.ExecStartCheck{
+		Tty: true,
+	})
+	if err != nil {
+		_ = conn.WriteJSON(map[string]string{"error": "Failed to attach to exec: " + err.Error()})
+		return
+	}
+	defer resp.Close()
+
+	// 3. Pipe stdout/stderr from container to WebSocket
+	go func() {
+		defer cancel()
+		buf := terminalBufPool.Get().([]byte)
+		defer terminalBufPool.Put(buf)
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				n, err := resp.Reader.Read(buf)
+				if n > 0 {
+					errWrite := conn.WriteMessage(websocket.TextMessage, buf[:n])
+					if errWrite != nil {
+						return
+					}
+				}
+				if err != nil {
+					return
+				}
+			}
+		}
+	}()
+
+	// 4. Pipe stdin from WebSocket to container, and listen for resize events
+	for {
+		_, payload, err := conn.ReadMessage()
+		if err != nil {
+			break
+		}
+
+		var msg map[string]interface{}
+		if err := json.Unmarshal(payload, &msg); err != nil {
+			// Fallback to raw text if not json
+			_, _ = resp.Conn.Write(payload)
+			continue
+		}
+
+		action, _ := msg["action"].(string)
+		if action == "input" {
+			data, _ := msg["data"].(string)
+			_, _ = resp.Conn.Write([]byte(data))
+		} else if action == "resize" {
+			colsVal, hasCols := msg["cols"]
+			rowsVal, hasRows := msg["rows"]
+			if hasCols && hasRows {
+				cols := int(colsVal.(float64))
+				rows := int(rowsVal.(float64))
+				_ = cli.ContainerExecResize(ctx, execCreate.ID, container.ResizeOptions{
+					Height: uint(rows),
+					Width:  uint(cols),
+				})
+			}
+		}
+	}
+}
+

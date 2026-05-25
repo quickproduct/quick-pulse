@@ -7,6 +7,10 @@
 	import ServiceRow from '$lib/components/kubernetes/ServiceRow.svelte';
 	import EventsList from '$lib/components/kubernetes/EventsList.svelte';
 
+	const CTX_STORAGE_KEY = 'qp.k8s.context';
+
+	let contexts = $state<k8s.KubeContext[]>([]);
+	let selectedContext = $state<string>('');
 	let overview = $state<k8s.ClusterOverview | null>(null);
 	let pods = $state<k8s.KubePod[]>([]);
 	let deployments = $state<k8s.KubeDeployment[]>([]);
@@ -17,17 +21,24 @@
 	let activeTab = $state<'pods' | 'deployments' | 'services' | 'events'>('pods');
 	let loading = $state(true);
 
+	// Empty string = "use kubeconfig current-context" on the backend.
+	// We always pass selectedContext through so the dropdown choice is honored.
+	function ctxArg(): string | undefined {
+		return selectedContext || undefined;
+	}
+
 	async function fetchData() {
 		loading = true;
 		try {
+			const ctx = ctxArg();
 			const nsFilter = selectedNamespace || undefined;
 			[overview, pods, deployments, services, namespaces, events] = await Promise.all([
-				k8s.getClusterOverview(),
-				k8s.getPods(nsFilter),
-				k8s.getDeployments(nsFilter),
-				k8s.getServices(nsFilter),
-				k8s.getNamespaces(),
-				k8s.getEvents(nsFilter)
+				k8s.getClusterOverview(ctx),
+				k8s.getPods(nsFilter, ctx),
+				k8s.getDeployments(nsFilter, ctx),
+				k8s.getServices(nsFilter, ctx),
+				k8s.getNamespaces(ctx),
+				k8s.getEvents(nsFilter, ctx)
 			]);
 		} catch (err) {
 			console.error('Failed to fetch K8s data', err);
@@ -36,8 +47,44 @@
 		}
 	}
 
-	onMount(() => {
+	// Pick an initial context: URL ?context= wins, then localStorage, then
+	// whichever context is marked current in kubeconfig, else the first.
+	function pickInitialContext(list: k8s.KubeContext[]): string {
+		const urlCtx = new URLSearchParams(window.location.search).get('context') || '';
+		if (urlCtx && list.some((c) => c.name === urlCtx)) return urlCtx;
+		const stored = localStorage.getItem(CTX_STORAGE_KEY) || '';
+		if (stored && list.some((c) => c.name === stored)) return stored;
+		const current = list.find((c) => c.current);
+		if (current) return current.name;
+		return list[0]?.name ?? '';
+	}
+
+	function persistContext(name: string) {
+		try {
+			localStorage.setItem(CTX_STORAGE_KEY, name);
+		} catch {}
+		const url = new URL(window.location.href);
+		if (name) url.searchParams.set('context', name);
+		else url.searchParams.delete('context');
+		history.replaceState(null, '', url.toString());
+	}
+
+	function onContextChange() {
+		persistContext(selectedContext);
+		selectedNamespace = ''; // namespace from one cluster doesn't apply to another
 		fetchData();
+	}
+
+	onMount(() => {
+		(async () => {
+			try {
+				contexts = await k8s.getContexts();
+			} catch (err) {
+				console.error('Failed to list kubeconfig contexts', err);
+			}
+			selectedContext = pickInitialContext(contexts);
+			await fetchData();
+		})();
 		const interval = setInterval(fetchData, 10000); // Refresh every 10s
 		return () => clearInterval(interval);
 	});
@@ -57,7 +104,20 @@
 		</div>
 
 		<div class="flex items-center gap-3">
-			<select 
+			{#if contexts.length > 0}
+				<select
+					bind:value={selectedContext}
+					onchange={onContextChange}
+					title="Kubeconfig context"
+					class="bg-white/5 border border-white/10 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 font-mono"
+				>
+					{#each contexts as ctx}
+						<option value={ctx.name}>{ctx.name}{ctx.current ? ' (current)' : ''}</option>
+					{/each}
+				</select>
+			{/if}
+
+			<select
 				bind:value={selectedNamespace}
 				class="bg-white/5 border border-white/10 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 font-mono"
 			>
@@ -119,15 +179,16 @@
 								<th class="px-4 py-3 text-center">Restarts</th>
 								<th class="px-4 py-3">Node</th>
 								<th class="px-4 py-3">Age</th>
+								<th class="px-4 py-3 text-right">Actions</th>
 							</tr>
 						</thead>
 						<tbody>
 							{#each pods as pod}
-								<PodRow {pod} />
+								<PodRow {pod} onDelete={fetchData} context={selectedContext} />
 							{/each}
 							{#if pods.length === 0}
 								<tr>
-									<td colspan="7" class="px-4 py-8 text-center text-[var(--qp-text-muted)]">No pods found in this namespace</td>
+									<td colspan="8" class="px-4 py-8 text-center text-[var(--qp-text-muted)]">No pods found in this namespace</td>
 								</tr>
 							{/if}
 						</tbody>
@@ -136,7 +197,7 @@
 			{:else if activeTab === 'deployments'}
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 					{#each deployments as deployment}
-						<DeploymentCard {deployment} />
+						<DeploymentCard {deployment} onScale={fetchData} context={selectedContext} />
 					{/each}
 					{#if deployments.length === 0}
 						<div class="col-span-full qp-card p-12 text-center text-[var(--qp-text-muted)]">

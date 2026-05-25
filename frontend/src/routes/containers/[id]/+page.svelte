@@ -119,8 +119,11 @@
 		{/if}
 
 		<div class="qp-card">
-			<h3 class="text-sm font-medium text-[var(--qp-text-muted)] uppercase tracking-wide mb-3">Recent Logs</h3>
-			<a href="/containers/{id}/logs" class="text-xs text-[var(--qp-accent)] hover:underline mb-2 block">Open live log viewer &rarr;</a>
+			<h3 class="text-sm font-medium text-[var(--qp-text-muted)] uppercase tracking-wide mb-3">Logs & Shell</h3>
+			<div class="flex gap-4 mb-2 flex-wrap">
+				<a href="/containers/{id}/logs" class="text-xs text-[var(--qp-accent)] hover:underline">Open live log viewer &rarr;</a>
+				<a href="/containers/{id}/terminal" class="text-xs text-[var(--qp-accent)] hover:underline">Open interactive terminal &rarr;</a>
+			</div>
 			<div class="log-viewer qp-scrollbar text-xs">
 				{#if logs.length}
 					{#each logs as line}
