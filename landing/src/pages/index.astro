@@ -1,0 +1,967 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="QuickPulse - Lightweight VPS & Docker Control Panel">
+	<!-- Navigation -->
+	<header class="w-full border-b border-white/[0.06] bg-[#0f1117]/80 backdrop-blur-md sticky top-0 z-50">
+		<div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+			<div class="flex items-center gap-3">
+				<svg class="w-6 h-6 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+					<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+				</svg>
+				<span class="text-lg font-bold text-white tracking-tight">QuickPulse</span>
+			</div>
+			<nav class="hidden md:flex items-center gap-8 text-sm">
+				<a href="#features" class="text-slate-400 hover:text-white transition-colors">Features</a>
+				<a href="#demo" class="text-slate-400 hover:text-white transition-colors">Interactive Demo</a>
+				<a href="/docs" class="text-slate-400 hover:text-white transition-colors font-semibold">Docs & Guide</a>
+			</nav>
+			<!-- Social Links (Replacing Console Button) -->
+			<div class="flex items-center gap-4">
+				<a href="https://github.com" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-white transition-all hover:scale-105" aria-label="GitHub">
+					<svg class="w-5.5 h-5.5" fill="currentColor" viewBox="0 0 24 24">
+						<path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482C19.138 20.197 22 16.44 22 12.017 22 6.484 17.522 2 12 2z"/>
+					</svg>
+				</a>
+				<a href="https://discord.com" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-white transition-all hover:scale-105" aria-label="Discord">
+					<svg class="w-5.5 h-5.5" fill="currentColor" viewBox="0 0 24 24">
+						<path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.094 13.094 0 01-1.873-.894.077.077 0 01-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 01.077-.011c3.92 1.793 8.18 1.793 12.061 0a.073.073 0 01.078.009c.12.099.246.195.373.289a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.894.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.156 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.156 2.418z"/>
+					</svg>
+				</a>
+			</div>
+		</div>
+	</header>
+
+	<!-- Hero Section -->
+	<section class="relative pt-24 pb-16 px-6 overflow-hidden">
+		<!-- Dynamic background mesh -->
+		<div class="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none"></div>
+		
+		<!-- Glow effects -->
+		<div class="absolute top-10 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+		<div class="max-w-5xl mx-auto text-center relative z-10 space-y-6 hero-content opacity-0">
+			<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
+				🚀 Self-Hosted Control Panel Built for Performance
+			</span>
+			<h1 class="text-4xl sm:text-7xl font-black text-white tracking-tight leading-none">
+				Lightweight Infrastructure <br />
+				<span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">Control Panel</span>
+			</h1>
+			<p class="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+				Administer and monitor Docker containers, Compose stacks, and Kubernetes resources in real-time. Runs on less than <span class="text-white font-bold">50MB of RAM</span>.
+			</p>
+			<div class="flex flex-col sm:flex-row justify-center gap-4 pt-4">
+			</div>
+		</div>
+	</section>
+
+	<!-- Interactive Sandbox Console Simulator (New Feature: Live understanding of the product) -->
+	<section id="demo" class="max-w-6xl mx-auto px-6 pb-20 relative z-10">
+		<div class="text-center max-w-2xl mx-auto mb-10 space-y-3">
+			<h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">Interactive Live Sandbox</h2>
+			<p class="text-sm text-slate-400">Interact with this simulated control panel widget to see how QuickPulse manages VPS loads and container restarts in real-time.</p>
+		</div>
+
+		<!-- Main Sandbox Window -->
+		<div class="qp-card p-0 border border-white/[0.08] bg-[#121422] rounded-xl overflow-hidden shadow-2xl">
+			<!-- Window Header -->
+			<div class="flex items-center justify-between px-4 py-3 bg-[#1a1d2e] border-b border-white/[0.06] select-none">
+				<div class="flex items-center gap-2">
+					<span class="w-3 h-3 rounded-full bg-red-500/80"></span>
+					<span class="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+					<span class="w-3 h-3 rounded-full bg-green-500/80"></span>
+					<span class="text-xs text-slate-400 font-mono ml-2">sandbox-console-ui v1.0.0</span>
+				</div>
+				<div class="flex items-center gap-2 text-[10px] text-indigo-400 font-mono bg-indigo-500/10 px-2.5 py-0.5 rounded border border-indigo-500/20">
+					● SIMULATOR MODE
+				</div>
+			</div>
+
+			<!-- Dashboard Contents -->
+			<div class="grid grid-cols-1 lg:grid-cols-4 min-h-[420px]">
+				<!-- Sidebar simulator -->
+				<div class="bg-[#0f1117] p-4 border-r border-white/[0.04] space-y-4 hidden lg:block font-mono text-xs text-slate-400">
+					<div class="space-y-1" id="sandbox-tabs">
+						<button data-tab="dashboard" class="w-full flex items-center gap-2 p-2 bg-indigo-500/10 text-white rounded font-bold transition-all duration-200 cursor-pointer text-left focus:outline-none border border-transparent">
+							<span>📊</span> Dashboard
+						</button>
+						<button data-tab="containers" class="w-full flex items-center gap-2 p-2 text-slate-400 hover:bg-white/[0.02] hover:text-white rounded transition-all duration-200 cursor-pointer text-left focus:outline-none border border-transparent">
+							<span>🐳</span> Containers
+						</button>
+						<button data-tab="kubernetes" class="w-full flex items-center gap-2 p-2 text-slate-400 hover:bg-white/[0.02] hover:text-white rounded transition-all duration-200 cursor-pointer text-left focus:outline-none border border-transparent">
+							<span>☸</span> Kubernetes
+						</button>
+						<button data-tab="logs" class="w-full flex items-center gap-2 p-2 text-slate-400 hover:bg-white/[0.02] hover:text-white rounded transition-all duration-200 cursor-pointer text-left focus:outline-none border border-transparent">
+							<span>📄</span> Logs
+						</button>
+					</div>
+					<hr class="border-white/[0.05]" />
+					<div class="text-[10px] text-slate-500 uppercase tracking-widest pl-2">System</div>
+					<div class="text-[10px] pl-2 font-mono">
+						Context: <span class="text-emerald-400">VPS-Local</span>
+					</div>
+				</div>
+
+				<!-- Main Dashboard View Simulator -->
+				<div class="lg:col-span-3 p-6 flex flex-col justify-between min-h-[420px]" id="sandbox-views-container">
+					<!-- Panel 1: Dashboard View -->
+					<div id="sim-view-dashboard" class="space-y-6 flex flex-col justify-between h-full transition-all duration-300">
+						<!-- Top row: Dynamic SVG rings -->
+						<div class="grid grid-cols-3 gap-4">
+							<!-- CPU -->
+							<div class="qp-card p-4 bg-white/[0.02] border border-white/[0.04] flex flex-col items-center justify-center text-center">
+								<span class="text-[10px] uppercase font-bold text-slate-400 mb-2">CPU LOAD</span>
+								<div class="relative w-18 h-18 flex items-center justify-center">
+									<svg class="w-full h-full transform -rotate-90">
+										<circle cx="36" cy="36" r="28" stroke="rgba(255,255,255,0.03)" stroke-width="4" fill="none" />
+										<circle cx="36" cy="36" r="28" stroke="#818cf8" stroke-width="5" fill="none"
+											stroke-dasharray="176" stroke-dashoffset="158" stroke-linecap="round"
+											class="transition-all duration-500 ease-out" id="sim-cpu-circle" />
+									</svg>
+									<span class="absolute inset-0 flex items-center justify-center font-mono text-sm text-white font-bold" id="sim-cpu-txt">10%</span>
+								</div>
+							</div>
+							<!-- Memory -->
+							<div class="qp-card p-4 bg-white/[0.02] border border-white/[0.04] flex flex-col items-center justify-center text-center">
+								<span class="text-[10px] uppercase font-bold text-slate-400 mb-2">MEMORY</span>
+								<div class="relative w-18 h-18 flex items-center justify-center">
+									<svg class="w-full h-full transform -rotate-90">
+										<circle cx="36" cy="36" r="28" stroke="rgba(255,255,255,0.03)" stroke-width="4" fill="none" />
+										<circle cx="36" cy="36" r="28" stroke="#22d3ee" stroke-width="5" fill="none"
+											stroke-dasharray="176" stroke-dashoffset="110" stroke-linecap="round"
+											class="transition-all duration-500 ease-out" id="sim-mem-circle" />
+									</svg>
+									<span class="absolute inset-0 flex items-center justify-center font-mono text-sm text-white font-bold" id="sim-mem-txt">37%</span>
+								</div>
+							</div>
+							<!-- Net in -->
+							<div class="qp-card p-4 bg-white/[0.02] border border-white/[0.04] flex flex-col items-center justify-center text-center">
+								<span class="text-[10px] uppercase font-bold text-slate-400 mb-2">CONTAINERS</span>
+								<div class="relative w-18 h-18 flex items-center justify-center">
+									<svg class="w-full h-full transform -rotate-90">
+										<circle cx="36" cy="36" r="28" stroke="rgba(255,255,255,0.03)" stroke-width="4" fill="none" />
+										<circle cx="36" cy="36" r="28" stroke="#34d399" stroke-width="5" fill="none"
+											stroke-dasharray="176" stroke-dashoffset="44" stroke-linecap="round"
+											class="transition-all duration-500 ease-out" id="sim-net-circle" />
+									</svg>
+									<span class="absolute inset-0 flex items-center justify-center font-mono text-sm text-white font-bold" id="sim-net-txt">3/4</span>
+								</div>
+							</div>
+						</div>
+
+						<!-- Container status & simulation triggers -->
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<!-- Container List Widget -->
+							<div class="qp-card bg-white/[0.01] border-white/[0.04] p-4 text-xs font-mono space-y-2">
+								<div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 pb-2">Active Containers</div>
+								<div class="flex items-center justify-between border-b border-white/[0.04] pb-1.5">
+									<span class="text-white">quickpulse-backend</span>
+									<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Running</span>
+								</div>
+								<div class="flex items-center justify-between border-b border-white/[0.04] pb-1.5">
+									<span class="text-white" id="container-db-name">sqlite-database</span>
+									<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" id="container-db-status">Running</span>
+								</div>
+								<div class="flex items-center justify-between">
+									<span class="text-white" id="container-worker-name">batch-worker</span>
+									<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" id="container-worker-status">Running</span>
+								</div>
+							</div>
+
+							<!-- Action Panel buttons -->
+							<div class="qp-card bg-white/[0.01] border-white/[0.04] p-4 flex flex-col justify-between gap-3">
+								<div class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Interactive Simulation Actions</div>
+								<div class="grid grid-cols-2 gap-2 text-[10px]">
+									<button class="qp-btn qp-btn-ghost px-2 py-2 text-[10px] hover:border-red-500/50 hover:text-red-400" id="btn-spike">
+										💥 Spike CPU Load
+									</button>
+									<button class="qp-btn qp-btn-ghost px-2 py-2 text-[10px] hover:border-indigo-500/50 hover:text-indigo-400" id="btn-restart">
+										🔄 Restart Database
+									</button>
+									<button class="qp-btn qp-btn-ghost col-span-2 px-2 py-2 text-[10px] hover:border-amber-500/50 hover:text-amber-400" id="btn-toggle-worker">
+										🛑 Toggle Batch Worker
+									</button>
+								</div>
+							</div>
+						</div>
+
+						<!-- Bottom Row: Terminal logs simulator -->
+						<div class="relative bg-black/60 rounded border border-white/[0.05] p-3 font-mono text-[10px] overflow-hidden">
+							<div class="text-[9px] text-slate-500 uppercase tracking-widest border-b border-white/[0.05] pb-1.5 mb-2 flex items-center justify-between">
+								<span>Log Terminal stream</span>
+								<span class="text-indigo-400 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-ping"></span> Live</span>
+							</div>
+							<div class="h-20 overflow-y-auto space-y-1.5 text-slate-400" id="sim-logs-container">
+								<div class="text-slate-500">[SYSTEM] Initialization completed. Running SQLite WAL...</div>
+								<div class="text-slate-500">[SYSTEM] Background telemetry goroutine started successfully.</div>
+								<div class="text-emerald-400">[INFO] WebSocket connected successfully to /ws/metrics.</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Panel 2: Containers View -->
+					<div id="sim-view-containers" class="hidden flex flex-col space-y-4 h-full transition-all duration-300">
+						<div class="flex items-center justify-between">
+							<span class="text-sm font-bold text-white font-mono">🐳 Container Lifecycle Manager</span>
+							<span class="text-[10px] font-mono text-slate-400" id="sim-containers-count">Total: 3 Active</span>
+						</div>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+							<!-- Backend Container Card -->
+							<div class="qp-card p-4 bg-white/[0.01] border-white/[0.05] flex flex-col justify-between gap-3 font-mono text-xs">
+								<div class="flex items-center justify-between">
+									<span class="text-white font-bold">quickpulse-backend</span>
+									<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Running</span>
+								</div>
+								<div class="space-y-1 text-[10px] text-slate-400">
+									<div>CPU: <span class="text-white" id="sim-card-backend-cpu">0.45%</span></div>
+									<div class="w-full bg-white/[0.05] h-1 rounded overflow-hidden">
+										<div class="bg-indigo-400 h-full w-[12%] transition-all duration-300" id="sim-card-backend-bar"></div>
+									</div>
+									<div class="pt-1">RAM: <span class="text-white">12.1 MB / 64 MB</span></div>
+								</div>
+								<div class="flex gap-2 text-[10px] pt-1">
+									<button class="qp-btn qp-btn-ghost px-2 py-1 flex-1 text-slate-500 border-white/5 cursor-not-allowed" disabled>Stop</button>
+									<button class="qp-btn qp-btn-ghost px-2 py-1 flex-1 hover:border-indigo-500/45 text-slate-300" id="btn-card-restart-backend">Restart</button>
+								</div>
+							</div>
+
+							<!-- DB Container Card -->
+							<div class="qp-card p-4 bg-white/[0.01] border-white/[0.05] flex flex-col justify-between gap-3 font-mono text-xs">
+								<div class="flex items-center justify-between">
+									<span class="text-white font-bold">sqlite-database</span>
+									<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" id="sim-card-db-status">Running</span>
+								</div>
+								<div class="space-y-1 text-[10px] text-slate-400">
+									<div>CPU: <span class="text-white" id="sim-card-db-cpu">0.12%</span></div>
+									<div class="w-full bg-white/[0.05] h-1 rounded overflow-hidden">
+										<div class="bg-cyan-400 h-full w-[4%] transition-all duration-300" id="sim-card-db-bar"></div>
+									</div>
+									<div class="pt-1">RAM: <span class="text-white">2.4 MB / 32 MB</span></div>
+								</div>
+								<div class="flex gap-2 text-[10px] pt-1">
+									<button class="qp-btn qp-btn-ghost px-2 py-1 flex-1 text-slate-500 border-white/5 cursor-not-allowed" disabled>Stop</button>
+									<button class="qp-btn qp-btn-ghost px-2 py-1 flex-1 hover:border-indigo-500/45 text-slate-300" id="btn-card-restart-db">Restart</button>
+								</div>
+							</div>
+
+							<!-- Batch Worker Container Card -->
+							<div class="qp-card p-4 bg-white/[0.01] border-white/[0.05] flex flex-col justify-between gap-3 font-mono text-xs">
+								<div class="flex items-center justify-between">
+									<span class="text-white font-bold">batch-worker</span>
+									<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" id="sim-card-worker-status">Running</span>
+								</div>
+								<div class="space-y-1 text-[10px] text-slate-400">
+									<div>CPU: <span class="text-white" id="sim-card-worker-cpu">0.82%</span></div>
+									<div class="w-full bg-white/[0.05] h-1 rounded overflow-hidden">
+										<div class="bg-emerald-400 h-full w-[18%] transition-all duration-300" id="sim-card-worker-bar"></div>
+									</div>
+									<div class="pt-1">RAM: <span class="text-white">4.8 MB / 64 MB</span></div>
+								</div>
+								<div class="flex gap-2 text-[10px] pt-1">
+									<button class="qp-btn qp-btn-ghost px-2 py-1 flex-1 text-red-400 hover:bg-red-500/10 hover:border-red-500/20" id="btn-card-toggle-worker">Stop</button>
+									<button class="qp-btn qp-btn-ghost px-2 py-1 flex-1 hover:border-indigo-500/45 text-slate-300" id="btn-card-restart-worker">Restart</button>
+								</div>
+							</div>
+
+							<!-- Redis Container Card -->
+							<div class="qp-card p-4 bg-white/[0.01] border-white/[0.05] flex flex-col justify-between gap-3 font-mono text-xs">
+								<div class="flex items-center justify-between">
+									<span class="text-white font-bold">redis-cache</span>
+									<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Running</span>
+								</div>
+								<div class="space-y-1 text-[10px] text-slate-400">
+									<div>CPU: <span class="text-white">0.05%</span></div>
+									<div class="w-full bg-white/[0.05] h-1 rounded overflow-hidden">
+										<div class="bg-amber-400 h-full w-[2%]"></div>
+									</div>
+									<div class="pt-1">RAM: <span class="text-white">1.8 MB / 16 MB</span></div>
+								</div>
+								<div class="flex gap-2 text-[10px] pt-1">
+									<button class="qp-btn qp-btn-ghost px-2 py-1 flex-1 text-slate-500 border-white/5 cursor-not-allowed" disabled>Stop</button>
+									<button class="qp-btn qp-btn-ghost px-2 py-1 flex-1 hover:border-indigo-500/45 text-slate-300" id="btn-card-restart-redis">Restart</button>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Panel 3: Kubernetes View -->
+					<div id="sim-view-kubernetes" class="hidden flex flex-col space-y-4 h-full transition-all duration-300">
+						<div class="flex items-center justify-between">
+							<span class="text-sm font-bold text-white font-mono">☸ Kubernetes Pod Cluster Monitor</span>
+							<button class="qp-btn qp-btn-ghost px-3 py-1.5 text-[10px] hover:border-indigo-500/45 text-indigo-400" id="btn-sim-scale-pods">
+								➕ Scale Deployment
+							</button>
+						</div>
+						
+						<!-- Simulated pods list -->
+						<div class="space-y-2 max-h-[160px] overflow-y-auto pr-1" id="sim-k8s-pods-list">
+							<div class="flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.04] rounded-lg font-mono text-[10px]" id="pod-auth">
+								<div class="flex items-center gap-3">
+									<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+									<span class="text-white font-bold">quickpulse-auth-7d9a8-abcde</span>
+								</div>
+								<div class="flex items-center gap-4 text-slate-400">
+									<span>Restarts: 0</span>
+									<span>12m</span>
+									<button class="text-indigo-400 hover:underline text-[9px] btn-pod-details" data-pod="Auth Service">Info</button>
+								</div>
+							</div>
+							<div class="flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.04] rounded-lg font-mono text-[10px]" id="pod-engine">
+								<div class="flex items-center gap-3">
+									<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+									<span class="text-white font-bold">quickpulse-engine-5f8b2-xyz99</span>
+								</div>
+								<div class="flex items-center gap-4 text-slate-400">
+									<span>Restarts: 1</span>
+									<span>4d</span>
+									<button class="text-indigo-400 hover:underline text-[9px] btn-pod-details" data-pod="Engine Controller">Info</button>
+								</div>
+							</div>
+							<div class="flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.04] rounded-lg font-mono text-[10px]" id="pod-worker">
+								<div class="flex items-center gap-3">
+									<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+									<span class="text-white font-bold">quickpulse-worker-8b7c4-mnp11</span>
+								</div>
+								<div class="flex items-center gap-4 text-slate-400">
+									<span>Restarts: 0</span>
+									<span>2h</span>
+									<button class="text-indigo-400 hover:underline text-[9px] btn-pod-details" data-pod="Batch Queue Worker">Info</button>
+								</div>
+							</div>
+						</div>
+
+						<!-- Pod Detail Drawer/Modal Simulator -->
+						<div class="hidden border border-white/[0.08] bg-[#1a1d35]/90 rounded-lg p-3 text-[10px] font-mono relative mt-2" id="sim-pod-info-card">
+							<button class="absolute right-2 top-2 text-slate-500 hover:text-white cursor-pointer" id="btn-close-pod-info">✕</button>
+							<div class="text-indigo-400 font-bold border-b border-white/[0.05] pb-1 mb-2">Pod Inspection Details</div>
+							<div class="grid grid-cols-2 gap-2 text-slate-300">
+								<div>Name: <span class="text-white" id="pod-detail-name">-</span></div>
+								<div>IP: <span class="text-white" id="pod-detail-ip">10.244.1.43</span></div>
+								<div>Ready: <span class="text-emerald-400">True (1/1)</span></div>
+								<div>Node: <span class="text-white">vps-node-1</span></div>
+								<div class="col-span-2">Image: <span class="text-indigo-300" id="pod-detail-image">quickpulse/engine:v1.12.0</span></div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Panel 4: Logs View -->
+					<div id="sim-view-logs" class="hidden flex flex-col space-y-3 h-full transition-all duration-300">
+						<div class="flex flex-wrap items-center justify-between gap-2">
+							<span class="text-sm font-bold text-white font-mono">📄 Log Stream & Filter System</span>
+							<!-- Filter Toolbar -->
+							<div class="flex items-center gap-1.5 text-[9px] font-mono" id="log-filters">
+								<span class="text-slate-500 uppercase">Levels:</span>
+								<button class="px-1.5 py-0.5 rounded bg-indigo-500 text-white font-bold cursor-pointer" data-level="all">ALL</button>
+								<button class="px-1.5 py-0.5 rounded bg-white/5 text-slate-400 hover:text-white cursor-pointer" data-level="info">INFO</button>
+								<button class="px-1.5 py-0.5 rounded bg-white/5 text-slate-400 hover:text-white cursor-pointer" data-level="warn">WARN</button>
+								<button class="px-1.5 py-0.5 rounded bg-white/5 text-slate-400 hover:text-white cursor-pointer" data-level="error">ERROR</button>
+							</div>
+						</div>
+
+						<!-- Search query FTS simulation -->
+						<div class="flex gap-2">
+							<input type="text" placeholder="FTS query logs (e.g. 'sqlite' or 'websocket')..." 
+								class="bg-black/40 border border-white/10 rounded px-2.5 py-1.5 text-[10px] font-mono flex-1 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" 
+								id="sim-log-search" />
+						</div>
+
+						<!-- Full Size Terminal -->
+						<div class="bg-black/60 rounded border border-white/[0.05] p-3 font-mono text-[10px] overflow-hidden flex-1 flex flex-col justify-between">
+							<div class="overflow-y-auto space-y-1.5 text-slate-400 min-h-[160px] max-h-[160px]" id="sim-full-logs-container">
+								<!-- Will populate dynamically -->
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Key Telemetry Section -->
+	<section class="max-w-7xl mx-auto px-6 py-12 stats-section opacity-0">
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+			<div class="qp-card p-8 border border-white/[0.04] bg-white/[0.01] relative overflow-hidden group">
+				<div class="absolute -right-8 -top-8 w-24 h-24 bg-indigo-500/5 rounded-full blur-xl group-hover:bg-indigo-500/10 transition-all"></div>
+				<div class="text-4xl sm:text-5xl font-extrabold text-indigo-400 font-mono">50 MB</div>
+				<div class="text-xs uppercase tracking-widest text-slate-400 mt-3 font-bold">Idle RAM Usage</div>
+			</div>
+			<div class="qp-card p-8 border border-white/[0.04] bg-white/[0.01] relative overflow-hidden group">
+				<div class="absolute -right-8 -top-8 w-24 h-24 bg-cyan-500/5 rounded-full blur-xl group-hover:bg-cyan-500/10 transition-all"></div>
+				<div class="text-4xl sm:text-5xl font-extrabold text-cyan-400 font-mono">0.00%</div>
+				<div class="text-xs uppercase tracking-widest text-slate-400 mt-3 font-bold">Idle CPU Overhead</div>
+			</div>
+			<div class="qp-card p-8 border border-white/[0.04] bg-white/[0.01] relative overflow-hidden group">
+				<div class="absolute -right-8 -top-8 w-24 h-24 bg-amber-500/5 rounded-full blur-xl group-hover:bg-amber-500/10 transition-all"></div>
+				<div class="text-4xl sm:text-5xl font-extrabold text-amber-400 font-mono">60 MB</div>
+				<div class="text-xs uppercase tracking-widest text-slate-400 mt-3 font-bold">Docker Image Size</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Features Matrix -->
+	<section id="features" class="max-w-7xl mx-auto px-6 py-20 border-t border-white/[0.04]">
+		<div class="text-center max-w-2xl mx-auto mb-16 space-y-4">
+			<h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">Everything You Need, None of the Bloat</h2>
+			<p class="text-sm text-slate-400 font-medium">QuickPulse packages diagnostics and operations into a single compiled Go binary.</p>
+		</div>
+
+		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 feature-grid">
+			<!-- Feature 1 -->
+			<div class="qp-card p-6 opacity-0 feature-item">
+				<div class="w-10 h-10 rounded bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-4">
+					<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+					</svg>
+				</div>
+				<h3 class="text-base font-bold text-white mb-2">Real-Time Metrics</h3>
+				<p class="text-sm text-slate-400 leading-relaxed">Stream system statistics (CPU, memory, disk, network) instantly to the client over thread-safe WebSockets.</p>
+			</div>
+
+			<!-- Feature 2 -->
+			<div class="qp-card p-6 opacity-0 feature-item">
+				<div class="w-10 h-10 rounded bg-cyan-500/10 text-cyan-400 flex items-center justify-center mb-4">
+					<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+					</svg>
+				</div>
+				<h3 class="text-base font-bold text-white mb-2">Docker & Stacks</h3>
+				<p class="text-sm text-slate-400 leading-relaxed">Start, stop, and restart containers. Orchestrate multi-service applications using native Docker Compose stacks.</p>
+			</div>
+
+			<!-- Feature 3 -->
+			<div class="qp-card p-6 opacity-0 feature-item">
+				<div class="w-10 h-10 rounded bg-teal-500/10 text-teal-400 flex items-center justify-center mb-4">
+					<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2z" />
+					</svg>
+				</div>
+				<h3 class="text-base font-bold text-white mb-2">Kubernetes Support</h3>
+				<p class="text-sm text-slate-400 leading-relaxed">Seamless integration with `kubectl` config. Monitor deployments, pods, services, and stream live pod logs.</p>
+			</div>
+
+			<!-- Feature 4 -->
+			<div class="qp-card p-6 opacity-0 feature-item">
+				<div class="w-10 h-10 rounded bg-red-500/10 text-red-400 flex items-center justify-center mb-4">
+					<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+					</svg>
+				</div>
+				<h3 class="text-base font-bold text-white mb-2">Custom Alert Rules</h3>
+				<p class="text-sm text-slate-400 leading-relaxed">Set alert thresholds on RAM, CPU, or disk metrics. Receive immediate, clean visual warnings inside the dashboard.</p>
+			</div>
+
+			<!-- Feature 5 -->
+			<div class="qp-card p-6 opacity-0 feature-item">
+				<div class="w-10 h-10 rounded bg-purple-500/10 text-purple-400 flex items-center justify-center mb-4">
+					<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+					</svg>
+				</div>
+				<h3 class="text-base font-bold text-white mb-2">Log Filtering</h3>
+				<p class="text-sm text-slate-400 leading-relaxed">Search through centralized docker and k8s logs easily. Filter by container, pod, level, or customized time range.</p>
+			</div>
+
+			<!-- Feature 6 -->
+			<div class="qp-card p-6 opacity-0 feature-item">
+				<div class="w-10 h-10 rounded bg-amber-500/10 text-amber-400 flex items-center justify-center mb-4">
+					<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+					</svg>
+				</div>
+				<h3 class="text-base font-bold text-white mb-2">Model Context (MCP)</h3>
+				<p class="text-sm text-slate-400 leading-relaxed">Integrated Model Context Protocol server lets AI assistants query logs and manage server workloads securely.</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- Footer -->
+	<footer class="border-t border-white/[0.06] py-16 text-center text-xs text-slate-500">
+		<div class="max-w-7xl mx-auto px-6 space-y-4">
+			<div class="flex justify-center items-center gap-2 text-white font-bold">
+				<svg class="w-4 h-4 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+					<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+				</svg>
+				QuickPulse VPS Control Panel
+			</div>
+			<p>&copy; {new Date().getFullYear()} QuickPulse Project. All rights reserved.</p>
+		</div>
+	</footer>
+
+	<!-- Animation & Simulator Client Script -->
+	<script>
+		import { animate, stagger } from "motion";
+
+		document.addEventListener("astro:page-load", () => {
+			// Hero Entrance
+			animate(".hero-content", { opacity: [0, 1], y: [20, 0] }, { duration: 0.8, easing: "ease-out" });
+			// Stats Entrance
+			animate(".stats-section", { opacity: [0, 1], y: [15, 0] }, { delay: 0.3, duration: 0.8, easing: "ease-out" });
+			// Staggered features Entrance
+			animate(".feature-item", { opacity: [0, 1], y: [20, 0] }, { delay: stagger(0.1, { start: 0.5 }), duration: 0.6, easing: "ease-out" });
+
+			// ==========================================
+			// Live Interactive Sandbox Simulator Logic
+			// ==========================================
+			const simCpuCircle = document.getElementById("sim-cpu-circle");
+			const simCpuTxt = document.getElementById("sim-cpu-txt");
+			const simMemCircle = document.getElementById("sim-mem-circle");
+			const simMemTxt = document.getElementById("sim-mem-txt");
+			const simNetCircle = document.getElementById("sim-net-circle");
+			const simNetTxt = document.getElementById("sim-net-txt");
+			const logsContainer = document.getElementById("sim-logs-container");
+
+			const btnSpike = document.getElementById("btn-spike");
+			const btnRestart = document.getElementById("btn-restart");
+			const btnToggleWorker = document.getElementById("btn-toggle-worker");
+
+			const containerDbStatus = document.getElementById("container-db-status");
+			const containerWorkerStatus = document.getElementById("container-worker-status");
+
+			let baselineCpu = 8.5;
+			let baselineMem = 37.2;
+			let containerCount = 3;
+			let isWorkerRunning = true;
+			let isCpuSpiking = false;
+
+			// Shared logs data
+			const baseLogs = [
+				{ text: "Initialization completed. Running SQLite WAL...", level: "info", timestamp: "02:05:12" },
+				{ text: "Background telemetry goroutine started successfully.", level: "info", timestamp: "02:05:12" },
+				{ text: "WebSocket connected successfully to /ws/metrics.", level: "info", timestamp: "02:05:13" },
+				{ text: "Incoming client connection authorized on session context 7.", level: "info", timestamp: "02:05:15" },
+				{ text: "Database backup completed: 25.1KB saved to disk.", level: "info", timestamp: "02:05:20" },
+				{ text: "Memory consumption at 82.4% for service 'quickpulse-backend'.", level: "warn", timestamp: "02:05:35" },
+				{ text: "Alert condition hit: CPU load average 1m exceeds threshold.", level: "warn", timestamp: "02:05:40" },
+				{ text: "Pod scaled successfully: web-deployment replica count at 4.", level: "info", timestamp: "02:06:01" },
+				{ text: "Re-establishing websocket connection stream to Kubernetes engine.", level: "info", timestamp: "02:06:10" },
+				{ text: "Connection lost to local docker socket: connection refused.", level: "error", timestamp: "02:06:12" },
+				{ text: "Health check failed for sqlite-database: connection pool saturated.", level: "error", timestamp: "02:06:15" },
+				{ text: "Automatic container restart sequence started for sqlite-database.", level: "warn", timestamp: "02:06:16" }
+			];
+
+			// Append log line helper
+			function addLog(text: string, level = "info") {
+				const timestamp = new Date().toLocaleTimeString();
+				baseLogs.push({ text, level, timestamp });
+				
+				// Standard dashboard logs view append
+				if (logsContainer) {
+					const div = document.createElement("div");
+					if (level === "critical" || level === "error") {
+						div.className = "text-red-500 font-bold";
+						div.textContent = `[ERROR] ${timestamp} - ${text}`;
+					} else if (level === "warning" || level === "warn") {
+						div.className = "text-amber-400";
+						div.textContent = `[WARN] ${timestamp} - ${text}`;
+					} else {
+						div.className = "text-slate-300";
+						div.textContent = `[INFO] ${timestamp} - ${text}`;
+					}
+					logsContainer.appendChild(div);
+					logsContainer.scrollTop = logsContainer.scrollHeight;
+					if (logsContainer.children.length > 25) {
+						logsContainer.removeChild(logsContainer.firstChild);
+					}
+				}
+
+				// Refresh full logs view
+				renderFullLogs();
+			}
+
+			// Update Gauge UI
+			function updateGauge(circle: HTMLElement | null, text: HTMLElement | null, percent: number, circumference = 176) {
+				if (!circle || !text) return;
+				const offset = circumference - (percent / 100) * circumference;
+				circle.setAttribute("stroke-dashoffset", String(offset));
+				text.textContent = `${percent.toFixed(0)}%`;
+			}
+
+			// Telemetry fluctuation loop
+			setInterval(() => {
+				if (isCpuSpiking) return;
+
+				// Random subtle load fluctuations
+				const cpuVal = baselineCpu + (Math.random() * 4 - 2);
+				const memVal = baselineMem + (Math.random() * 0.4 - 0.2);
+
+				updateGauge(simCpuCircle, simCpuTxt, Math.max(1, cpuVal));
+				updateGauge(simMemCircle, simMemTxt, memVal);
+
+				// Fluctuate CPU usages in Containers tab
+				const bkCpu = document.getElementById("sim-card-backend-cpu");
+				const bkBar = document.getElementById("sim-card-backend-bar");
+				const dbCpu = document.getElementById("sim-card-db-cpu");
+				const dbBar = document.getElementById("sim-card-db-bar");
+				const wkCpu = document.getElementById("sim-card-worker-cpu");
+				const wkBar = document.getElementById("sim-card-worker-bar");
+
+				if (bkCpu && bkBar) {
+					const val = 0.4 + (Math.random() * 0.2 - 0.1);
+					bkCpu.textContent = `${val.toFixed(2)}%`;
+					bkBar.style.width = `${val * 25}%`;
+				}
+				if (dbCpu && dbBar) {
+					const val = 0.1 + (Math.random() * 0.06 - 0.03);
+					dbCpu.textContent = `${val.toFixed(2)}%`;
+					dbBar.style.width = `${val * 30}%`;
+				}
+				if (wkCpu && wkBar && isWorkerRunning) {
+					const val = 0.8 + (Math.random() * 0.4 - 0.2);
+					wkCpu.textContent = `${val.toFixed(2)}%`;
+					wkBar.style.width = `${val * 20}%`;
+				}
+			}, 2000);
+
+			// Action: CPU load spike simulation
+			btnSpike?.addEventListener("click", () => {
+				if (isCpuSpiking) return;
+				isCpuSpiking = true;
+				addLog("Synthesized cpu load spike initiated...", "warn");
+
+				// Animate up
+				let currentCpu = baselineCpu;
+				const interval = setInterval(() => {
+					currentCpu += 15;
+					if (currentCpu >= 94.6) {
+						currentCpu = 94.6;
+						clearInterval(interval);
+						
+						// UI Alert styles
+						if (simCpuCircle) simCpuCircle.setAttribute("stroke", "#ef4444");
+						if (simCpuTxt) simCpuTxt.className = "absolute inset-0 flex items-center justify-center font-mono text-sm text-red-400 font-bold animate-pulse";
+						
+						addLog("Host warning: CPU utilization exceeded 90%!", "error");
+						addLog("Alert rule 'High Host CPU' flagged successfully", "warn");
+
+						// Cool down after 4.5 seconds
+						setTimeout(() => {
+							addLog("Spike load simulator cooling down...", "info");
+							const coolInterval = setInterval(() => {
+								currentCpu -= 12;
+								if (currentCpu <= baselineCpu) {
+									currentCpu = baselineCpu;
+									clearInterval(coolInterval);
+									isCpuSpiking = false;
+									
+									// Revert styles
+									if (simCpuCircle) simCpuCircle.setAttribute("stroke", "#818cf8");
+									if (simCpuTxt) simCpuTxt.className = "absolute inset-0 flex items-center justify-center font-mono text-sm text-white font-bold";
+									addLog("CPU metrics recovered to normal levels.", "info");
+								}
+								updateGauge(simCpuCircle, simCpuTxt, currentCpu);
+							}, 200);
+						}, 4500);
+					}
+					updateGauge(simCpuCircle, simCpuTxt, currentCpu);
+				}, 100);
+			});
+
+			// Action: Restart container simulation (helper)
+			function handleDbRestart() {
+				const statusElements = [containerDbStatus, document.getElementById("sim-card-db-status")];
+				addLog("Instructing docker engine to restart 'sqlite-database' container...", "info");
+				
+				statusElements.forEach(el => {
+					if (!el) return;
+					el.className = "px-2 py-0.5 rounded text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse";
+					el.textContent = "Restarting";
+				});
+				addLog("[sqlite-database] Shutting connection handler threads down.", "info");
+
+				setTimeout(() => {
+					statusElements.forEach(el => {
+						if (!el) return;
+						el.className = "px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+						el.textContent = "Running";
+					});
+					addLog("[sqlite-database] Container spawned. Entrypoint running.", "info");
+					addLog("[sqlite-database] SQLite DB handle re-opened. WAL mode verified.", "info");
+					addLog("Database health check returned: 200 OK.", "info");
+				}, 2500);
+			}
+
+			btnRestart?.addEventListener("click", handleDbRestart);
+			document.getElementById("btn-card-restart-db")?.addEventListener("click", handleDbRestart);
+
+			// Restart handlers for other containers in card view
+			document.getElementById("btn-card-restart-backend")?.addEventListener("click", () => {
+				addLog("Instructing docker engine to restart 'quickpulse-backend' container...", "info");
+				addLog("[quickpulse-backend] Gracefully terminated router daemon.", "info");
+				setTimeout(() => {
+					addLog("[quickpulse-backend] Gunicorn core listener active. Port 8000 bound.", "info");
+				}, 1500);
+			});
+
+			document.getElementById("btn-card-restart-redis")?.addEventListener("click", () => {
+				addLog("Instructing docker engine to restart 'redis-cache' container...", "info");
+				addLog("[redis-cache] Saving DB database snapshots to disk...", "info");
+				setTimeout(() => {
+					addLog("[redis-cache] Redis TCP listener port 6379 initialized.", "info");
+				}, 1000);
+			});
+
+			// Action: Toggle worker container state
+			function handleWorkerToggle() {
+				const statusElements = [containerWorkerStatus, document.getElementById("sim-card-worker-status")];
+				const toggleBtns = [btnToggleWorker, document.getElementById("btn-card-toggle-worker")];
+				const wkCpu = document.getElementById("sim-card-worker-cpu");
+				const wkBar = document.getElementById("sim-card-worker-bar");
+				
+				isWorkerRunning = !isWorkerRunning;
+
+				if (isWorkerRunning) {
+					statusElements.forEach(el => {
+						if (!el) return;
+						el.className = "px-2 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+						el.textContent = "Running";
+					});
+					toggleBtns.forEach(btn => {
+						if (!btn) return;
+						if (btn.id === 'btn-toggle-worker') {
+							btn.className = "qp-btn qp-btn-ghost col-span-2 px-2 py-2 text-[10px] hover:border-amber-500/50 hover:text-amber-400";
+							btn.textContent = "🛑 Toggle Batch Worker";
+						} else {
+							btn.className = "qp-btn qp-btn-ghost px-2 py-1 flex-1 text-red-400 hover:bg-red-500/10 hover:border-red-500/20";
+							btn.textContent = "Stop";
+						}
+					});
+					containerCount = 3;
+					if (simNetCircle && simNetTxt) {
+						simNetCircle.setAttribute("stroke-dashoffset", "44");
+						simNetTxt.textContent = "3/4";
+					}
+					const countEl = document.getElementById("sim-containers-count");
+					if (countEl) countEl.textContent = "Total: 3 Active";
+
+					addLog("Starting container 'batch-worker'...", "info");
+					addLog("[batch-worker] Started batch-job queues daemon.", "info");
+				} else {
+					statusElements.forEach(el => {
+						if (!el) return;
+						el.className = "px-2 py-0.5 rounded text-[10px] bg-red-500/10 text-red-400 border border-red-500/20";
+						el.textContent = "Stopped";
+					});
+					toggleBtns.forEach(btn => {
+						if (!btn) return;
+						if (btn.id === 'btn-toggle-worker') {
+							btn.className = "qp-btn qp-btn-ghost col-span-2 px-2 py-2 text-[10px] border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10";
+							btn.textContent = "▶ Start Batch Worker";
+						} else {
+							btn.className = "qp-btn qp-btn-ghost px-2 py-1 flex-1 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/20";
+							btn.textContent = "Start";
+						}
+					});
+					containerCount = 2;
+					if (simNetCircle && simNetTxt) {
+						simNetCircle.setAttribute("stroke-dashoffset", "88");
+						simNetTxt.textContent = "2/4";
+					}
+					const countEl = document.getElementById("sim-containers-count");
+					if (countEl) countEl.textContent = "Total: 2 Active";
+
+					if (wkCpu) wkCpu.textContent = "0.00%";
+					if (wkBar) wkBar.style.width = "0%";
+
+					addLog("Stopping container 'batch-worker'...", "warn");
+					addLog("[batch-worker] Process terminated with signal 15.", "warn");
+				}
+			}
+
+			btnToggleWorker?.addEventListener("click", handleWorkerToggle);
+			document.getElementById("btn-card-toggle-worker")?.addEventListener("click", handleWorkerToggle);
+			document.getElementById("btn-card-restart-worker")?.addEventListener("click", () => {
+				addLog("Instructing docker engine to restart 'batch-worker' container...", "info");
+				addLog("[batch-worker] Restarting process worker threads...", "info");
+			});
+
+			// ==========================================
+			// Navigation Tab Switching & Animations
+			// ==========================================
+			const tabButtons = document.querySelectorAll("#sandbox-tabs button");
+			const viewPanels = [
+				{ id: "dashboard", el: document.getElementById("sim-view-dashboard") },
+				{ id: "containers", el: document.getElementById("sim-view-containers") },
+				{ id: "kubernetes", el: document.getElementById("sim-view-kubernetes") },
+				{ id: "logs", el: document.getElementById("sim-view-logs") }
+			];
+
+			tabButtons.forEach(btn => {
+				btn.addEventListener("click", () => {
+					const targetTab = btn.getAttribute("data-tab");
+					if (!targetTab) return;
+
+					// Deactivate other tabs
+					tabButtons.forEach(b => {
+						b.className = "w-full flex items-center gap-2 p-2 text-slate-400 hover:bg-white/[0.02] hover:text-white rounded transition-all duration-200 cursor-pointer text-left focus:outline-none border border-transparent";
+					});
+
+					// Activate this tab
+					btn.className = "w-full flex items-center gap-2 p-2 bg-indigo-500/10 text-white rounded font-bold transition-all duration-200 cursor-pointer text-left focus:outline-none border border-indigo-500/20";
+
+					// Show correct view panel
+					viewPanels.forEach(panel => {
+						if (panel.id === targetTab) {
+							panel.el?.classList.remove("hidden");
+							// Run smooth entrance animation
+							animate(panel.el, { opacity: [0, 1], y: [10, 0] }, { duration: 0.35, easing: "ease-out" });
+						} else {
+							panel.el?.classList.add("hidden");
+						}
+					});
+
+					// Trigger logs rendering if logs view is opened
+					if (targetTab === "logs") {
+						renderFullLogs();
+					}
+				});
+			});
+
+			// ==========================================
+			// Kubernetes Panel Simulator Logic
+			// ==========================================
+			const podsList = document.getElementById("sim-k8s-pods-list");
+			const scalePodsBtn = document.getElementById("btn-sim-scale-pods");
+			const podInfoCard = document.getElementById("sim-pod-info-card");
+			const podDetailName = document.getElementById("pod-detail-name");
+			const podDetailIp = document.getElementById("pod-detail-ip");
+			const podDetailImage = document.getElementById("pod-detail-image");
+			const closePodInfoBtn = document.getElementById("btn-close-pod-info");
+
+			// Attach default pod detail events
+			document.querySelectorAll(".btn-pod-details").forEach(btn => {
+				btn.addEventListener("click", () => {
+					const name = btn.getAttribute("data-pod");
+					if (name) showPodInfo(name);
+				});
+			});
+
+			function showPodInfo(name: string) {
+				if (!podInfoCard || !podDetailName || !podDetailIp || !podDetailImage) return;
+				podDetailName.textContent = `quickpulse-${name.toLowerCase().replace(/\s+/g, '-')}-7d9a8`;
+				
+				// Mock data depending on pod
+				if (name.includes("Auth")) {
+					podDetailIp.textContent = "10.244.1.43";
+					podDetailImage.textContent = "quickpulse/auth:v1.12.0";
+				} else if (name.includes("Engine")) {
+					podDetailIp.textContent = "10.244.2.99";
+					podDetailImage.textContent = "quickpulse/engine:v1.12.0";
+				} else {
+					podDetailIp.textContent = "10.244.1.84";
+					podDetailImage.textContent = "quickpulse/worker:v1.12.0";
+				}
+
+				podInfoCard.classList.remove("hidden");
+				animate(podInfoCard, { opacity: [0, 1], scale: [0.95, 1] }, { duration: 0.2 });
+			}
+
+			closePodInfoBtn?.addEventListener("click", () => {
+				if (podInfoCard) {
+					animate(podInfoCard, { opacity: 0, scale: 0.95 }, { duration: 0.15 }).then(() => {
+						podInfoCard.classList.add("hidden");
+					});
+				}
+			});
+
+			scalePodsBtn?.addEventListener("click", () => {
+				if (!podsList) return;
+				const hex = Math.random().toString(16).substring(2, 6);
+				const podName = `quickpulse-worker-scaled-${hex}`;
+				
+				const item = document.createElement("div");
+				item.className = "flex items-center justify-between p-3 bg-white/[0.02] border border-white/[0.04] rounded-lg font-mono text-[10px] opacity-0";
+				item.innerHTML = `
+					<div class="flex items-center gap-3">
+						<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+						<span class="text-white font-bold">${podName}</span>
+					</div>
+					<div class="flex items-center gap-4 text-slate-400">
+						<span>Restarts: 0</span>
+						<span>Just now</span>
+						<button class="text-indigo-400 hover:underline text-[9px] btn-pod-details" data-pod="Worker Scaled ${hex}">Info</button>
+					</div>
+				`;
+				podsList.appendChild(item);
+				animate(item, { opacity: [0, 1], x: [-10, 0] }, { duration: 0.3 });
+
+				// Attach click handler for info on new element
+				item.querySelector(".btn-pod-details")?.addEventListener("click", () => {
+					showPodInfo(`Worker Scaled ${hex}`);
+				});
+
+				addLog(`Kubernetes replica set scaled. Spawned pod ${podName}.`, "info");
+			});
+
+			// ==========================================
+			// Logs Filter System Logic
+			// ==========================================
+			const fullLogsContainer = document.getElementById("sim-full-logs-container");
+			const searchInput = document.getElementById("sim-log-search");
+			const filterLevelButtons = document.querySelectorAll("#log-filters button");
+			
+			let currentLogLevelFilter = "all";
+			let currentLogSearchQuery = "";
+
+			filterLevelButtons.forEach(btn => {
+				btn.addEventListener("click", () => {
+					const level = btn.getAttribute("data-level");
+					if (!level) return;
+
+					// Reset styling
+					filterLevelButtons.forEach(b => {
+						b.className = "px-1.5 py-0.5 rounded bg-white/5 text-slate-400 hover:text-white cursor-pointer";
+					});
+
+					// Set active style
+					btn.className = "px-1.5 py-0.5 rounded bg-indigo-500 text-white font-bold cursor-pointer";
+					currentLogLevelFilter = level;
+					renderFullLogs();
+				});
+			});
+
+			searchInput?.addEventListener("input", (e) => {
+				currentLogSearchQuery = (e.target as any).value.toLowerCase();
+				renderFullLogs();
+			});
+
+			function renderFullLogs() {
+				if (!fullLogsContainer) return;
+				fullLogsContainer.innerHTML = "";
+
+				const filtered = baseLogs.filter(log => {
+					// Level Filter
+					if (currentLogLevelFilter !== "all" && log.level !== currentLogLevelFilter) return false;
+					// Search Query Filter
+					if (currentLogSearchQuery && !log.text.toLowerCase().includes(currentLogSearchQuery)) return false;
+					return true;
+				});
+
+				if (filtered.length === 0) {
+					fullLogsContainer.innerHTML = `<div class="text-slate-500 text-center py-8">No matching logs found in simulation pool.</div>`;
+					return;
+				}
+
+				filtered.forEach(log => {
+					const div = document.createElement("div");
+					div.className = "text-[10px] leading-relaxed border-b border-white/[0.01] pb-0.5";
+					
+					let levelBadge = "";
+					if (log.level === "info") {
+						levelBadge = `<span class="text-emerald-400 font-bold">[INFO]</span>`;
+					} else if (log.level === "warn") {
+						levelBadge = `<span class="text-amber-400 font-bold">[WARN]</span>`;
+					} else if (log.level === "error") {
+						levelBadge = `<span class="text-red-500 font-bold">[ERROR]</span>`;
+					}
+
+					div.innerHTML = `<span class="text-slate-500">${log.timestamp}</span> ${levelBadge} <span class="text-slate-300">${log.text}</span>`;
+					fullLogsContainer.appendChild(div);
+				});
+
+				fullLogsContainer.scrollTop = fullLogsContainer.scrollHeight;
+			}
+		});
+	</script>
+</Layout>

@@ -12,6 +12,7 @@
 	let loaded = $state(false);
 
 	let isLoginPage = $derived(page.url?.pathname === '/login');
+	let isPublicPage = $derived(page.url?.pathname === '/login');
 
 	onMount(async () => {
 		await initAuth();
@@ -35,7 +36,7 @@
 			<span class="text-[var(--qp-text-muted)]">Loading...</span>
 		</div>
 	</div>
-{:else if isLoginPage}
+{:else if isPublicPage}
 	{@render children()}
 {:else if $isAuthenticated}
 	<div class="flex min-h-screen">

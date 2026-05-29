@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+:root {
+	--qp-bg: #0f1117;
+	--qp-surface: #1a1d2e;
+	--qp-surface-2: #242842;
+	--qp-border: #2e3348;
+	--qp-text: #e2e8f0;
+	--qp-text-muted: #94a3b8;
+	--qp-accent: #6366f1;
+	--qp-accent-hover: #818cf8;
+}
+
+body {
+	font-family: 'Inter', system-ui, -apple-system, sans-serif;
+	background-color: var(--qp-bg);
+	color: var(--qp-text);
+	overflow-x: hidden;
+}
+
+/* Custom premium scrollbars */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+::-webkit-scrollbar-track {
+	background: var(--qp-bg);
+}
+::-webkit-scrollbar-thumb {
+	background: var(--qp-border);
+	border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+	background: var(--qp-accent);
+}
+
+.qp-card {
+	background: var(--qp-surface);
+	border: 1px solid var(--qp-border);
+	border-radius: 0.75rem;
+	padding: 1.25rem;
+	transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.qp-card:hover {
+	border-color: var(--qp-accent);
+	box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.15);
+	transform: translateY(-2px);
+}
+
+.qp-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.6rem 1.2rem;
+	border-radius: 0.5rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	transition: all 0.2s ease;
+	cursor: pointer;
+	border: 1px solid transparent;
+}
+.qp-btn-primary {
+	background: var(--qp-accent);
+	color: white;
+}
+.qp-btn-primary:hover {
+	background: var(--qp-accent-hover);
+	box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.4);
+}
+.qp-btn-ghost {
+	background: transparent;
+	color: var(--qp-text-muted);
+	border-color: var(--qp-border);
+}
+.qp-btn-ghost:hover {
+	background: var(--qp-surface-2);
+	color: var(--qp-text);
+}

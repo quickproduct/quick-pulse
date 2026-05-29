@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"io"
 	"io/fs"
@@ -11,6 +12,7 @@ import (
 
 	"quickpulse/backend/db"
 	"quickpulse/backend/handlers"
+	logsservice "quickpulse/backend/logs/service"
 	"quickpulse/backend/workers"
 	"quickpulse/backend/ws"
 )
@@ -44,6 +46,17 @@ func main() {
 	workers.StartMetricsWorker()
 	workers.StartEventsWorker()
 	workers.StartMetricsJanitorWorker()
+
+	// 2b. Start the logs module. We use Background() as the parent — the
+	// process lifetime is the service lifetime. Failures here aren't fatal;
+	// the logs endpoints just return 503 until the next restart.
+	hostName, _ := os.Hostname()
+	if svc, err := logsservice.Start(context.Background(), db.DB, hostName); err != nil {
+		log.Printf("[logs] failed to start: %v — logs endpoints will return 503", err)
+	} else {
+		handlers.LogsService = svc
+		log.Printf("[logs] service started")
+	}
 
 	// 3. Define HTTP Mux with Go 1.22 routing enhancement
 	mux := http.NewServeMux()
@@ -112,10 +125,20 @@ func main() {
 	mux.HandleFunc("GET /api/v1/kubernetes/events", handlers.AuthMiddleware(handlers.K8sEventsHandler))
 	mux.HandleFunc("GET /api/v1/kubernetes/pods/{namespace}/{pod_name}/logs", handlers.AuthMiddleware(handlers.GetK8sPodLogsHandler))
 
+	// --- Logs API (centralized search across all sources) ---
+	mux.HandleFunc("GET /api/v1/logs", handlers.AuthMiddleware(handlers.SearchLogsHandler))
+	mux.HandleFunc("GET /api/v1/logs/sources", handlers.AuthMiddleware(handlers.SourcesHandler))
+	mux.HandleFunc("GET /api/v1/logs/stats", handlers.AuthMiddleware(handlers.StatsHandler))
+	mux.HandleFunc("GET /api/v1/logs/export", handlers.AuthMiddleware(handlers.ExportLogsHandler))
+	mux.HandleFunc("GET /api/v1/logs/settings", handlers.AuthMiddleware(handlers.SettingsGetHandler))
+	mux.HandleFunc("PUT /api/v1/logs/settings", handlers.AdminMiddleware(handlers.SettingsPutHandler))
+	mux.HandleFunc("GET /api/v1/logs/{id}", handlers.AuthMiddleware(handlers.GetLogHandler))
+
 	// --- WebSockets ---
 	mux.HandleFunc("GET /ws/metrics", handlers.HandleWSChannel("metrics"))
 	mux.HandleFunc("GET /ws/container-status", handlers.HandleWSChannel("container-status"))
 	mux.HandleFunc("GET /ws/events", handlers.HandleWSChannel("events"))
+	mux.HandleFunc("GET /ws/logs/stream", handlers.HandleWSLogsStream)
 	mux.HandleFunc("GET /ws/logs/{container_id}", handlers.HandleWSLogs)
 	mux.HandleFunc("GET /ws/kubernetes/logs/{namespace}/{pod_name}", handlers.HandleWSK8sLogs)
 	mux.HandleFunc("GET /ws/containers/{id}/terminal", handlers.HandleWSContainerTerminal)

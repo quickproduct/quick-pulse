@@ -42,6 +42,21 @@ func InitDB() {
 		log.Printf("Warning: failed to set auto_vacuum incremental mode: %v", err)
 	}
 
+	// PRAGMAs tuned for the logs module (and the metrics workload). NORMAL
+	// is safe under WAL; a 4 MB page cache is plenty for our 64 MB budget;
+	// mmap is disabled because it would inflate RSS on Linux and we can't
+	// afford the slack. temp_store=MEMORY keeps small sorts off disk.
+	for _, pragma := range []string{
+		"PRAGMA synchronous=NORMAL;",
+		"PRAGMA cache_size=-4000;",
+		"PRAGMA temp_store=MEMORY;",
+		"PRAGMA mmap_size=0;",
+	} {
+		if _, err := DB.Exec(pragma); err != nil {
+			log.Printf("Warning: %s failed: %v", pragma, err)
+		}
+	}
+
 	// Create tables
 	createTables()
 
