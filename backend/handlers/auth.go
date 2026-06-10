@@ -107,19 +107,18 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var sessionExists bool
-	var expiresAtStr string
+	var expiresAt time.Time
 	err = db.DB.QueryRow(
 		"SELECT EXISTS(SELECT 1 FROM sessions WHERE refresh_token = ?), expires_at FROM sessions WHERE refresh_token = ?",
 		req.RefreshToken, req.RefreshToken,
-	).Scan(&sessionExists, &expiresAtStr)
+	).Scan(&sessionExists, &expiresAt)
 
 	if err != nil || !sessionExists {
 		WriteError(w, http.StatusUnauthorized, "Session not found")
 		return
 	}
 
-	expiresAt, err := time.Parse("2006-01-02 15:04:05", expiresAtStr)
-	if err != nil || time.Now().After(expiresAt) {
+	if time.Now().After(expiresAt) {
 		_, _ = db.DB.Exec("DELETE FROM sessions WHERE refresh_token = ?", req.RefreshToken)
 		WriteError(w, http.StatusUnauthorized, "Refresh token expired")
 		return
@@ -163,12 +162,13 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var id, email, role, createdAtStr string
+	var id, email, role string
 	var isActive int
+	var createdAt time.Time
 	err := db.DB.QueryRow(
 		"SELECT id, email, role, is_active, created_at FROM users WHERE id = ?",
 		userID,
-	).Scan(&id, &email, &role, &isActive, &createdAtStr)
+	).Scan(&id, &email, &role, &isActive, &createdAt)
 
 	if err == sql.ErrNoRows {
 		WriteError(w, http.StatusNotFound, "User not found")
@@ -177,8 +177,6 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, http.StatusInternalServerError, "Database error")
 		return
 	}
-
-	createdAt, _ := time.Parse("2006-01-02 15:04:05", createdAtStr)
 
 	WriteJSON(w, http.StatusOK, models.UserResponse{
 		ID:        id,

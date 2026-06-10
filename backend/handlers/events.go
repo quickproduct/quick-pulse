@@ -43,8 +43,8 @@ func GetEventsHandler(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var e models.EventResponse
 		var cID, cName, metadataStr sql.NullString
-		var timeStr string
-		err := rows.Scan(&e.ID, &cID, &cName, &e.EventType, &timeStr, &metadataStr)
+		var eventTime time.Time
+		err := rows.Scan(&e.ID, &cID, &cName, &e.EventType, &eventTime, &metadataStr)
 		if err != nil {
 			WriteError(w, http.StatusInternalServerError, "Error reading events")
 			return
@@ -55,8 +55,7 @@ func GetEventsHandler(w http.ResponseWriter, r *http.Request) {
 		if cName.Valid {
 			e.ContainerName = cName.String
 		}
-		t, _ := time.Parse("2006-01-02 15:04:05", timeStr)
-		e.Timestamp = &t
+		e.Timestamp = &eventTime
 		if metadataStr.Valid && metadataStr.String != "" {
 			_ = json.Unmarshal([]byte(metadataStr.String), &e.Metadata)
 		} else {

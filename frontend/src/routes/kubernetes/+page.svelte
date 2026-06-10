@@ -96,7 +96,7 @@
 	});
 </script>
 
-<div class="p-6 max-w-7xl mx-auto">
+<div class="max-w-7xl mx-auto">
 	<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
 		<div>
 			<h1 class="text-3xl font-bold text-white tracking-tight">Kubernetes Dashboard</h1>
@@ -129,7 +129,7 @@
 
 			<button 
 				onclick={fetchData}
-				class="qp-button-secondary py-2.5 px-4 flex items-center gap-2"
+				class="qp-btn qp-btn-ghost flex items-center gap-2"
 				disabled={loading}
 			>
 				<svg class="w-4 h-4 {loading ? 'animate-spin' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">

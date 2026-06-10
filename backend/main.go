@@ -106,11 +106,11 @@ func main() {
 
 	// --- Alerts API ---
 	mux.HandleFunc("GET /api/v1/alerts", handlers.AuthMiddleware(handlers.ListAlertsHandler))
-	mux.HandleFunc("POST /api/v1/alerts/{id}/acknowledge", handlers.AuthMiddleware(handlers.AcknowledgeAlertHandler))
+	mux.HandleFunc("POST /api/v1/alerts/{alert_id}/acknowledge", handlers.AuthMiddleware(handlers.AcknowledgeAlertHandler))
 	mux.HandleFunc("GET /api/v1/alert-rules", handlers.AuthMiddleware(handlers.ListRulesHandler))
 	mux.HandleFunc("POST /api/v1/alert-rules", handlers.AuthMiddleware(handlers.CreateRuleHandler))
-	mux.HandleFunc("PUT /api/v1/alert-rules/{id}", handlers.AuthMiddleware(handlers.UpdateRuleHandler))
-	mux.HandleFunc("DELETE /api/v1/alert-rules/{id}", handlers.AuthMiddleware(handlers.DeleteRuleHandler))
+	mux.HandleFunc("PUT /api/v1/alert-rules/{rule_id}", handlers.AuthMiddleware(handlers.UpdateRuleHandler))
+	mux.HandleFunc("DELETE /api/v1/alert-rules/{rule_id}", handlers.AuthMiddleware(handlers.DeleteRuleHandler))
 
 	// --- Kubernetes API ---
 	mux.HandleFunc("GET /api/v1/kubernetes/contexts", handlers.AuthMiddleware(handlers.K8sContextsHandler))

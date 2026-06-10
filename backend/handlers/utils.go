@@ -37,19 +37,24 @@ func ParseJSON(r *http.Request, data interface{}) error {
 // AuthMiddleware verifies the JWT access token and adds User ID to context
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var token string
 		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			WriteError(w, http.StatusUnauthorized, "Missing authorization header")
+		if authHeader != "" {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
+				token = parts[1]
+			}
+		}
+
+		if token == "" {
+			token = r.URL.Query().Get("token")
+		}
+
+		if token == "" {
+			WriteError(w, http.StatusUnauthorized, "Missing authorization header or token query parameter")
 			return
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-			WriteError(w, http.StatusUnauthorized, "Invalid authorization header format")
-			return
-		}
-
-		token := parts[1]
 		claims, err := auth.VerifyToken(token, "access")
 		if err != nil {
 			WriteError(w, http.StatusUnauthorized, "Invalid or expired token")

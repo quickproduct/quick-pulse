@@ -32,14 +32,17 @@
 		return (type || '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 	}
 
-	onMount(async () => {
-		try {
-			events = await getEvents(100);
-		} catch (e: any) {
-			addToast(e.message || 'Failed to load events', 'error');
-		} finally {
-			loading = false;
+	onMount(() => {
+		async function init() {
+			try {
+				events = await getEvents(100);
+			} catch (e: any) {
+				addToast(e.message || 'Failed to load events', 'error');
+			} finally {
+				loading = false;
+			}
 		}
+		init();
 
 		const unsubscribe = wsManager.onMessage('events', (data: Event) => {
 			if (live) {

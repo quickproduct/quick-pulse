@@ -222,15 +222,17 @@ func splitCSV(vals []string) []string {
 // updates and pause/resume.
 //
 // Client wire protocol (JSON):
-//   { "action": "subscribe", "filter": { level: ["ERROR"], ... } }
-//   { "action": "filter",    "filter": { ... } }   // change filter live
-//   { "action": "pause" }
-//   { "action": "resume" }
+//
+//	{ "action": "subscribe", "filter": { level: ["ERROR"], ... } }
+//	{ "action": "filter",    "filter": { ... } }   // change filter live
+//	{ "action": "pause" }
+//	{ "action": "resume" }
 //
 // Server messages:
-//   { "logs":    [PublicEntry, ...] }     // a batch
-//   { "dropped": <int> }                  // backpressure signal
-//   { "error":   "..." }                  // fatal; server is about to close
+//
+//	{ "logs":    [PublicEntry, ...] }     // a batch
+//	{ "dropped": <int> }                  // backpressure signal
+//	{ "error":   "..." }                  // fatal; server is about to close
 func HandleWSLogsStream(w http.ResponseWriter, r *http.Request) {
 	if LogsService == nil {
 		w.WriteHeader(http.StatusServiceUnavailable)

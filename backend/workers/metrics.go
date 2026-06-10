@@ -285,20 +285,36 @@ func StartMetricsJanitorWorker() {
 }
 
 func runMetricsJanitor() error {
-	// 1. Delete metrics older than 30 days
-	_, err := db.DB.Exec("DELETE FROM host_metrics WHERE time < datetime('now', '-30 days')")
+	retentionDays := 30
+	if envVal := os.Getenv("METRICS_RETENTION_DAYS"); envVal != "" {
+		if val, err := strconv.Atoi(envVal); err == nil && val > 0 {
+			retentionDays = val
+		}
+	}
+
+	downsampleHours := 24
+	if envVal := os.Getenv("METRICS_DOWNSAMPLE_THRESHOLD_HOURS"); envVal != "" {
+		if val, err := strconv.Atoi(envVal); err == nil && val > 0 {
+			downsampleHours = val
+		}
+	}
+
+	// 1. Delete metrics older than retentionDays
+	pruneQuery := fmt.Sprintf("DELETE FROM host_metrics WHERE time < datetime('now', '-%d days')", retentionDays)
+	_, err := db.DB.Exec(pruneQuery)
 	if err != nil {
 		return fmt.Errorf("failed to prune old metrics: %w", err)
 	}
 
-	// 2. Downsample metrics older than 24 hours (group by hour and host_id)
-	rows, err := db.DB.Query(`
-		SELECT strftime('%Y-%m-%d %H:00:00', time) as hour_bucket, host_id
+	// 2. Downsample metrics older than downsampleHours (group by hour and host_id)
+	downsampleQuery := fmt.Sprintf(`
+		SELECT strftime('%%Y-%%m-%%d %%H:00:00', time) as hour_bucket, host_id
 		FROM host_metrics
-		WHERE time < datetime('now', '-24 hours')
+		WHERE time < datetime('now', '-%d hours')
 		GROUP BY hour_bucket, host_id
 		HAVING count(*) > 1
-	`)
+	`, downsampleHours)
+	rows, err := db.DB.Query(downsampleQuery)
 	if err != nil {
 		return fmt.Errorf("failed to query raw metrics for downsampling: %w", err)
 	}
@@ -396,4 +412,3 @@ func runMetricsJanitor() error {
 	log.Println("Metrics janitor: cycle completed successfully")
 	return nil
 }
-

@@ -31,8 +31,8 @@ func ListAlertsHandler(w http.ResponseWriter, r *http.Request) {
 		var a models.AlertResponse
 		var ruleID sql.NullString
 		var ackVal int
-		var timeStr string
-		err := rows.Scan(&a.ID, &ruleID, &a.Severity, &a.Message, &ackVal, &timeStr)
+		var alertTime time.Time
+		err := rows.Scan(&a.ID, &ruleID, &a.Severity, &a.Message, &ackVal, &alertTime)
 		if err != nil {
 			WriteError(w, http.StatusInternalServerError, "Error reading alerts")
 			return
@@ -41,8 +41,7 @@ func ListAlertsHandler(w http.ResponseWriter, r *http.Request) {
 			a.RuleID = &ruleID.String
 		}
 		a.Acknowledged = ackVal != 0
-		t, _ := time.Parse("2006-01-02 15:04:05", timeStr)
-		a.CreatedAt = &t
+		a.CreatedAt = &alertTime
 		alerts = append(alerts, a)
 	}
 
@@ -74,12 +73,12 @@ func AcknowledgeAlertHandler(w http.ResponseWriter, r *http.Request) {
 	var a models.AlertResponse
 	var ruleID sql.NullString
 	var ackVal int
-	var timeStr string
+	var alertTime time.Time
 	err = db.DB.QueryRow(`
 		SELECT id, rule_id, severity, message, acknowledged, created_at
 		FROM alerts
 		WHERE id = ?
-	`, alertID).Scan(&a.ID, &ruleID, &a.Severity, &a.Message, &ackVal, &timeStr)
+	`, alertID).Scan(&a.ID, &ruleID, &a.Severity, &a.Message, &ackVal, &alertTime)
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, "Failed to fetch updated alert")
 		return
@@ -89,8 +88,7 @@ func AcknowledgeAlertHandler(w http.ResponseWriter, r *http.Request) {
 		a.RuleID = &ruleID.String
 	}
 	a.Acknowledged = ackVal != 0
-	t, _ := time.Parse("2006-01-02 15:04:05", timeStr)
-	a.CreatedAt = &t
+	a.CreatedAt = &alertTime
 
 	WriteJSON(w, http.StatusOK, a)
 }
@@ -112,15 +110,14 @@ func ListRulesHandler(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var r models.AlertRuleResponse
 		var enabledVal int
-		var timeStr string
-		err := rows.Scan(&r.ID, &r.MetricType, &r.Threshold, &r.Operator, &r.DurationSeconds, &enabledVal, &timeStr)
+		var ruleTime time.Time
+		err := rows.Scan(&r.ID, &r.MetricType, &r.Threshold, &r.Operator, &r.DurationSeconds, &enabledVal, &ruleTime)
 		if err != nil {
 			WriteError(w, http.StatusInternalServerError, "Error reading rules")
 			return
 		}
 		r.Enabled = enabledVal != 0
-		t, _ := time.Parse("2006-01-02 15:04:05", timeStr)
-		r.CreatedAt = &t
+		r.CreatedAt = &ruleTime
 		rules = append(rules, r)
 	}
 
@@ -225,19 +222,18 @@ func UpdateRuleHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var resp models.AlertRuleResponse
-	var timeStr string
+	var ruleTime time.Time
 	err = db.DB.QueryRow(`
 		SELECT id, metric_type, threshold, operator, duration_seconds, enabled, created_at
 		FROM alert_rules WHERE id = ?
-	`, ruleID).Scan(&resp.ID, &resp.MetricType, &resp.Threshold, &resp.Operator, &resp.DurationSeconds, &currentEnabled, &timeStr)
+	`, ruleID).Scan(&resp.ID, &resp.MetricType, &resp.Threshold, &resp.Operator, &resp.DurationSeconds, &currentEnabled, &ruleTime)
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, "Failed to load updated rule")
 		return
 	}
 
 	resp.Enabled = currentEnabled != 0
-	t, _ := time.Parse("2006-01-02 15:04:05", timeStr)
-	resp.CreatedAt = &t
+	resp.CreatedAt = &ruleTime
 
 	WriteJSON(w, http.StatusOK, resp)
 }

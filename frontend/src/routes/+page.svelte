@@ -30,15 +30,18 @@
 		return `${hours}h ${mins}m`;
 	}
 
-	onMount(async () => {
-		try {
-			dashboard = await getDashboard();
-		} catch (e: any) {
-			error = e.message || 'Failed to load dashboard';
-			addToast(error ?? 'Failed to load dashboard', 'error');
-		} finally {
-			loading = false;
+	onMount(() => {
+		async function init() {
+			try {
+				dashboard = await getDashboard();
+			} catch (e: any) {
+				error = e.message || 'Failed to load dashboard';
+				addToast(error ?? 'Failed to load dashboard', 'error');
+			} finally {
+				loading = false;
+			}
 		}
+		init();
 
 		const unsubscribe = wsManager.onMessage('metrics', (data) => {
 			liveMetrics.set(data);
@@ -94,8 +97,11 @@
 						</defs>
 					</svg>
 					<div class="absolute inset-0 flex flex-col items-center justify-center">
-						<span class="text-3xl font-extrabold text-white font-mono tracking-tight">{metrics?.cpu_percent?.toFixed(1) ?? '0.0'}%</span>
-						<span class="text-[10px] font-bold text-[var(--qp-text-muted)] uppercase tracking-widest mt-1">CPU</span>
+						<div class="flex items-baseline justify-center">
+							<span class="text-2xl font-extrabold text-white font-mono tracking-tight">{metrics?.cpu_percent?.toFixed(1) ?? '0.0'}</span>
+							<span class="text-xs font-semibold text-[var(--qp-text-muted)] ml-0.5">%</span>
+						</div>
+						<span class="text-[10px] font-bold text-[var(--qp-text-muted)] uppercase tracking-widest mt-0.5">CPU</span>
 					</div>
 				</div>
 				<div class="mt-6 text-center">
@@ -122,8 +128,11 @@
 						</defs>
 					</svg>
 					<div class="absolute inset-0 flex flex-col items-center justify-center">
-						<span class="text-3xl font-extrabold text-white font-mono tracking-tight">{metrics?.memory_percent?.toFixed(1) ?? '0.0'}%</span>
-						<span class="text-[10px] font-bold text-[var(--qp-text-muted)] uppercase tracking-widest mt-1">RAM</span>
+						<div class="flex items-baseline justify-center">
+							<span class="text-2xl font-extrabold text-white font-mono tracking-tight">{metrics?.memory_percent?.toFixed(1) ?? '0.0'}</span>
+							<span class="text-xs font-semibold text-[var(--qp-text-muted)] ml-0.5">%</span>
+						</div>
+						<span class="text-[10px] font-bold text-[var(--qp-text-muted)] uppercase tracking-widest mt-0.5">RAM</span>
 					</div>
 				</div>
 				<div class="mt-6 text-center">
@@ -150,8 +159,11 @@
 						</defs>
 					</svg>
 					<div class="absolute inset-0 flex flex-col items-center justify-center">
-						<span class="text-3xl font-extrabold text-white font-mono tracking-tight">{metrics?.disk_percent?.toFixed(1) ?? '0.0'}%</span>
-						<span class="text-[10px] font-bold text-[var(--qp-text-muted)] uppercase tracking-widest mt-1">DISK</span>
+						<div class="flex items-baseline justify-center">
+							<span class="text-2xl font-extrabold text-white font-mono tracking-tight">{metrics?.disk_percent?.toFixed(1) ?? '0.0'}</span>
+							<span class="text-xs font-semibold text-[var(--qp-text-muted)] ml-0.5">%</span>
+						</div>
+						<span class="text-[10px] font-bold text-[var(--qp-text-muted)] uppercase tracking-widest mt-0.5">DISK</span>
 					</div>
 				</div>
 				<div class="mt-6 text-center">

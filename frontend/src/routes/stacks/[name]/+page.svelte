@@ -101,10 +101,10 @@
 	<title>{name} - Stack Details - QuickPulse</title>
 </svelte:head>
 
-<div class="p-6 max-w-7xl mx-auto space-y-6">
+<div class="max-w-7xl mx-auto space-y-6">
 	<!-- Breadcrumbs and Header -->
 	<div>
-		<a href="/stacks" class="text-xs text-[var(--qp-qp-accent, #3b82f6)] hover:underline flex items-center gap-1">
+		<a href="/stacks" class="text-xs text-[var(--qp-accent, #3b82f6)] hover:underline flex items-center gap-1">
 			&larr; Back to Stacks
 		</a>
 		{#if stack}
