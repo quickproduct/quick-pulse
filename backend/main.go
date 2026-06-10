@@ -3,12 +3,16 @@ package main
 import (
 	"context"
 	"embed"
+	"errors"
 	"io"
 	"io/fs"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
 	"quickpulse/backend/db"
 	"quickpulse/backend/handlers"
@@ -21,12 +25,20 @@ import (
 var staticFS embed.FS
 
 func corsMiddleware(next http.Handler) http.Handler {
+	// The frontend is embedded and served from the same origin, so CORS is
+	// only needed when an external origin (e.g. a separately hosted UI) is
+	// explicitly allowed. CORS_ALLOW_ORIGIN unset means same-origin only.
+	allowOrigin := os.Getenv("CORS_ALLOW_ORIGIN")
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// CORS headers
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		if allowOrigin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", allowOrigin)
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+			if allowOrigin != "*" {
+				w.Header().Set("Access-Control-Allow-Credentials", "true")
+				w.Header().Set("Vary", "Origin")
+			}
+		}
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -191,8 +203,30 @@ func main() {
 	}
 	addr := ":" + port
 
+	// ReadHeaderTimeout guards against slow-loris connections. Read/Write
+	// timeouts stay unset on purpose: WebSocket and log-follow responses are
+	// long-lived and would be killed by a global deadline.
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           corsMiddleware(mux),
+		ReadHeaderTimeout: 10 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
+
+	shutdownCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		<-shutdownCtx.Done()
+		log.Printf("Shutdown signal received, draining connections...")
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		_ = srv.Shutdown(ctx)
+	}()
+
 	log.Printf("Starting consolidated QuickPulse backend on %s", addr)
-	if err := http.ListenAndServe(addr, corsMiddleware(mux)); err != nil {
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("Failed to run HTTP server: %v", err)
 	}
+	log.Printf("Server stopped")
 }

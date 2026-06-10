@@ -155,6 +155,15 @@ func contextFromRequest(r *http.Request) string {
 	return r.URL.Query().Get("context")
 }
 
+// k8sCallTimeout bounds a single (non-streaming) Kubernetes API call so a
+// hung API server cannot wedge a handler. Streaming endpoints (log follow)
+// manage their own lifetimes and must not use this.
+const k8sCallTimeout = 15 * time.Second
+
+func k8sCtx(r *http.Request) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(r.Context(), k8sCallTimeout)
+}
+
 // KubeContextInfo describes a single kubeconfig context for the UI dropdown.
 type KubeContextInfo struct {
 	Name    string `json:"name"`
@@ -231,7 +240,8 @@ func K8sOverviewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := r.Context()
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
 	nodesList, err := clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		WriteJSON(w, http.StatusOK, disconnectedOverview(disconnectedReason(err)))
@@ -296,7 +306,9 @@ func K8sNodesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nodeList, err := clientset.CoreV1().Nodes().List(r.Context(), metav1.ListOptions{})
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	nodeList, err := clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		WriteJSON(w, http.StatusOK, []map[string]interface{}{})
 		return
@@ -353,7 +365,9 @@ func K8sPodsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	podList, err := clientset.CoreV1().Pods(ns).List(r.Context(), metav1.ListOptions{})
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	podList, err := clientset.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		WriteJSON(w, http.StatusOK, []map[string]interface{}{})
 		return
@@ -431,7 +445,9 @@ func K8sDeploymentsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deployList, err := clientset.AppsV1().Deployments(ns).List(r.Context(), metav1.ListOptions{})
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	deployList, err := clientset.AppsV1().Deployments(ns).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		WriteJSON(w, http.StatusOK, []map[string]interface{}{})
 		return
@@ -473,7 +489,9 @@ func K8sServicesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	svcList, err := clientset.CoreV1().Services(ns).List(r.Context(), metav1.ListOptions{})
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	svcList, err := clientset.CoreV1().Services(ns).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		WriteJSON(w, http.StatusOK, []map[string]interface{}{})
 		return
@@ -527,7 +545,9 @@ func K8sNamespacesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nsList, err := clientset.CoreV1().Namespaces().List(r.Context(), metav1.ListOptions{})
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	nsList, err := clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		WriteJSON(w, http.StatusOK, []string{})
 		return
@@ -540,7 +560,8 @@ func K8sNamespacesHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, resp)
 }
 
-// K8sEventsHandler handles GET /api/v1/kubernetes/events
+// K8sEventsHandler handles GET /api/v1/kubernetes/events.
+// Optional query params: namespace, type (Normal|Warning), limit (default 200, max 1000).
 func K8sEventsHandler(w http.ResponseWriter, r *http.Request) {
 	ns := r.URL.Query().Get("namespace")
 	clientset, err := getK8sClientForContext(contextFromRequest(r))
@@ -549,7 +570,19 @@ func K8sEventsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	eventList, err := clientset.CoreV1().Events(ns).List(r.Context(), metav1.ListOptions{})
+	limit := 200
+	if l, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && l > 0 {
+		limit = min(l, 1000)
+	}
+
+	listOpts := metav1.ListOptions{}
+	if evType := r.URL.Query().Get("type"); evType == "Normal" || evType == "Warning" {
+		listOpts.FieldSelector = "type=" + evType
+	}
+
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	eventList, err := clientset.CoreV1().Events(ns).List(ctx, listOpts)
 	if err != nil {
 		WriteJSON(w, http.StatusOK, []map[string]interface{}{})
 		return
@@ -586,6 +619,12 @@ func K8sEventsHandler(w http.ResponseWriter, r *http.Request) {
 			"age_seconds": age,
 		})
 	}
+	sort.Slice(resp, func(i, j int) bool {
+		return resp[i]["age_seconds"].(int) < resp[j]["age_seconds"].(int)
+	})
+	if len(resp) > limit {
+		resp = resp[:limit]
+	}
 	WriteJSON(w, http.StatusOK, resp)
 }
 
@@ -618,7 +657,8 @@ func GetK8sPodLogsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := r.Context()
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
 	pod, err := clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
 	if err != nil {
 		WriteError(w, http.StatusNotFound, fmt.Sprintf("Pod %s not found in namespace %s: %v", podName, namespace, err))
@@ -725,13 +765,19 @@ func HandleWSK8sLogs(w http.ResponseWriter, r *http.Request) {
 	paused := false
 	var mu sync.Mutex
 
-	// Read logs and stream to WS
+	// Read logs and stream to WS. When the log stream ends (pod gone, kubelet
+	// rotation, API error) tell the client and close the conn so the command
+	// loop below unblocks instead of leaving a silent, dead "Live" view.
 	go func() {
 		reader := bufio.NewReader(stream)
 		for {
 			line, err := reader.ReadString('\n')
 			if err != nil {
-				break
+				if ctx.Err() == nil {
+					_ = conn.WriteJSON(map[string]interface{}{"eof": true})
+				}
+				_ = conn.Close()
+				return
 			}
 			line = strings.TrimSuffix(line, "\n")
 			line = strings.TrimSuffix(line, "\r")
@@ -745,7 +791,7 @@ func HandleWSK8sLogs(w http.ResponseWriter, r *http.Request) {
 					"line": line,
 				})
 				if err != nil {
-					break
+					return
 				}
 			}
 		}
@@ -790,6 +836,10 @@ func ScaleDeploymentHandler(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
+	if req.Replicas < 0 || req.Replicas > 1000 {
+		WriteError(w, http.StatusBadRequest, "Replicas must be between 0 and 1000")
+		return
+	}
 
 	clientset, err := getK8sClientForContext(contextFromRequest(r))
 	if err != nil {
@@ -797,15 +847,16 @@ func ScaleDeploymentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Direct API call
-	scale, err := clientset.AppsV1().Deployments(namespace).GetScale(r.Context(), name, metav1.GetOptions{})
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	scale, err := clientset.AppsV1().Deployments(namespace).GetScale(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to get deployment scale: %v", err))
 		return
 	}
 
 	scale.Spec.Replicas = int32(req.Replicas)
-	_, err = clientset.AppsV1().Deployments(namespace).UpdateScale(r.Context(), name, scale, metav1.UpdateOptions{})
+	_, err = clientset.AppsV1().Deployments(namespace).UpdateScale(ctx, name, scale, metav1.UpdateOptions{})
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to scale deployment: %v", err))
 		return
@@ -832,11 +883,16 @@ func DeletePodHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Direct API call
-	gracePeriod := int64(0)
-	err = clientset.CoreV1().Pods(namespace).Delete(r.Context(), name, metav1.DeleteOptions{
-		GracePeriodSeconds: &gracePeriod,
-	})
+	// Graceful delete by default; ?force=true skips the grace period the way
+	// `kubectl delete --force --grace-period=0` does.
+	deleteOpts := metav1.DeleteOptions{}
+	if r.URL.Query().Get("force") == "true" {
+		gracePeriod := int64(0)
+		deleteOpts.GracePeriodSeconds = &gracePeriod
+	}
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	err = clientset.CoreV1().Pods(namespace).Delete(ctx, name, deleteOpts)
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to delete pod: %v", err))
 		return

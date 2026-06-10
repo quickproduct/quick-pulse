@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
 	"net/http"
@@ -57,7 +56,9 @@ func GetDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	cli, err := getDockerClient()
 	if err == nil {
 		defer cli.Close()
-		containers, err := cli.ContainerList(context.Background(), container.ListOptions{All: true})
+		ctx, cancel := dockerCtx(r)
+		defer cancel()
+		containers, err := cli.ContainerList(ctx, container.ListOptions{All: true})
 		if err == nil {
 			for _, c := range containers {
 				cName := ""

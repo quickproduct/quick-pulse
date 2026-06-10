@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"quickpulse/backend/auth"
 	"quickpulse/backend/db"
@@ -13,6 +14,13 @@ import (
 type contextKey string
 
 const UserIDKey contextKey = "userId"
+
+// dockerCtx bounds a single Docker API call so a hung daemon cannot wedge a
+// handler. 60s leaves room for ContainerStop/Restart, which block for the
+// container's stop timeout (10s default) before SIGKILL.
+func dockerCtx(r *http.Request) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(r.Context(), 60*time.Second)
+}
 
 // WriteJSON sends a JSON response with status code
 func WriteJSON(w http.ResponseWriter, status int, data interface{}) {

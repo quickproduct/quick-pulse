@@ -172,6 +172,10 @@ func createTables() {
 		`CREATE INDEX IF NOT EXISTS idx_host_metrics_host_id_time ON host_metrics(host_id, time DESC);`,
 		`CREATE INDEX IF NOT EXISTS idx_alerts_created_at ON alerts(created_at DESC);`,
 		`CREATE INDEX IF NOT EXISTS idx_alerts_rule_id ON alerts(rule_id);`,
+		`CREATE INDEX IF NOT EXISTS idx_container_events_timestamp ON container_events(timestamp DESC);`,
+		`CREATE INDEX IF NOT EXISTS idx_container_events_docker_id ON container_events(container_docker_id);`,
+		`CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);`,
+		`CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);`,
 	}
 
 	for _, q := range queries {
