@@ -108,8 +108,11 @@ export const getServices = (namespace?: string, context?: string): Promise<KubeS
 export const getNamespaces = (context?: string): Promise<string[]> =>
 	apiFetch(`/kubernetes/namespaces${qs({ context })}`);
 
-export const getEvents = (namespace?: string, context?: string): Promise<KubeEvent[]> =>
-	apiFetch(`/kubernetes/events${qs({ namespace, context })}`);
+export const getEvents = (
+	namespace?: string,
+	context?: string,
+	type?: 'Normal' | 'Warning'
+): Promise<KubeEvent[]> => apiFetch(`/kubernetes/events${qs({ namespace, context, type })}`);
 
 export const getPodLogs = (
 	namespace: string,

@@ -15,6 +15,7 @@
 	let logContainer: HTMLDivElement | undefined = $state();
 	let ws: WebSocket | undefined;
 	let wsConnected = $state(false);
+	let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 
 	async function loadInitialLogs() {
 		loading = true;
@@ -66,7 +67,7 @@
 		ws.onclose = (event) => {
 			wsConnected = false;
 			if (event.code !== 1000) {
-				setTimeout(connectWS, 3000);
+				reconnectTimer = setTimeout(connectWS, 3000);
 			}
 		};
 	}
@@ -84,6 +85,7 @@
 	});
 
 	onDestroy(() => {
+		if (reconnectTimer) clearTimeout(reconnectTimer);
 		if (ws) {
 			ws.onclose = null;
 			ws.close(1000);

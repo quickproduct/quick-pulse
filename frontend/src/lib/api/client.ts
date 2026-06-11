@@ -1,8 +1,18 @@
 const API_BASE = '/api/v1';
 const REQUEST_TIMEOUT_MS = 30_000;
+const REFRESH_TIMEOUT_MS = 10_000;
 
 let isRefreshing = false;
-let refreshQueue: ((token: string) => void)[] = [];
+let refreshQueue: { resolve: (token: string) => void; reject: (err: Error) => void }[] = [];
+
+function flushRefreshQueue(token: string | null, err?: Error) {
+	const oldQueue = [...refreshQueue];
+	refreshQueue = [];
+	for (const waiter of oldQueue) {
+		if (token) waiter.resolve(token);
+		else waiter.reject(err ?? new Error('Token refresh failed'));
+	}
+}
 
 let accessToken: string | null = null;
 
@@ -61,21 +71,27 @@ export async function apiFetch<T>(
 					if (!isRefreshing) {
 						isRefreshing = true;
 						try {
-							const refreshResponse = await fetch(`${API_BASE}/auth/refresh`, {
-								method: 'POST',
-								headers: { 'Content-Type': 'application/json' },
-								body: JSON.stringify({ refresh_token: rt })
-							});
+							// The refresh call gets its own short timeout: if it hangs,
+							// every queued request would otherwise hang with it.
+							const refreshController = new AbortController();
+							const refreshTimeoutId = setTimeout(() => refreshController.abort(), REFRESH_TIMEOUT_MS);
+							let refreshResponse: Response;
+							try {
+								refreshResponse = await fetch(`${API_BASE}/auth/refresh`, {
+									method: 'POST',
+									headers: { 'Content-Type': 'application/json' },
+									body: JSON.stringify({ refresh_token: rt }),
+									signal: refreshController.signal
+								});
+							} finally {
+								clearTimeout(refreshTimeoutId);
+							}
 							if (refreshResponse.ok) {
 								const data = await refreshResponse.json();
 								setAccessToken(data.access_token);
 								localStorage.setItem('qp_refresh_token', data.refresh_token);
 								isRefreshing = false;
-
-								// Flush queue
-								const oldQueue = [...refreshQueue];
-								refreshQueue = [];
-								oldQueue.forEach(cb => cb(data.access_token));
+								flushRefreshQueue(data.access_token);
 
 								// Retry original request
 								headers['Authorization'] = `Bearer ${data.access_token}`;
@@ -94,23 +110,27 @@ export async function apiFetch<T>(
 							console.error('[api] Silent token refresh failed:', refreshErr);
 						} finally {
 							isRefreshing = false;
+							flushRefreshQueue(null, new Error('Session expired'));
 						}
 					} else {
 						// Wait for current refresh operation to finish, then retry
 						return new Promise<T>((resolve, reject) => {
-							refreshQueue.push((newToken) => {
-								headers['Authorization'] = `Bearer ${newToken}`;
-								fetch(url, { ...options, headers, signal: controller.signal })
-									.then(async (res) => {
-										if (!res.ok) {
-											reject(new Error(`Retry failed: HTTP ${res.status}`));
-										} else if (res.status === 204) {
-											resolve(undefined as T);
-										} else {
-											resolve(res.json());
-										}
-									})
-									.catch(reject);
+							refreshQueue.push({
+								resolve: (newToken) => {
+									headers['Authorization'] = `Bearer ${newToken}`;
+									fetch(url, { ...options, headers, signal: controller.signal })
+										.then(async (res) => {
+											if (!res.ok) {
+												reject(new Error(`Retry failed: HTTP ${res.status}`));
+											} else if (res.status === 204) {
+												resolve(undefined as T);
+											} else {
+												resolve(res.json());
+											}
+										})
+										.catch(reject);
+								},
+								reject
 							});
 						});
 					}

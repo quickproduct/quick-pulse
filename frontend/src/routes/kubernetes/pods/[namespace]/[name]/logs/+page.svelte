@@ -16,6 +16,8 @@
 	let logContainer: HTMLDivElement | undefined = $state();
 	let ws: WebSocket | undefined;
 	let wsConnected = $state(false);
+	let streamEnded = $state(false);
+	let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 
 	async function loadInitialLogs() {
 		loading = true;
@@ -44,6 +46,17 @@
 			if (paused) return;
 			try {
 				const data = JSON.parse(event.data);
+				if (data.eof) {
+					// Server closed the log stream (pod gone or logs rotated).
+					// Don't reconnect-loop against a stream that will never resume.
+					streamEnded = true;
+					logs = [...logs, '— log stream ended —'];
+					return;
+				}
+				if (data.error) {
+					addToast(data.error, 'error');
+					return;
+				}
 				if (data.line) {
 					logs = [...logs, data.line];
 					if (logs.length > 2000) {
@@ -67,8 +80,8 @@
 
 		ws.onclose = (event) => {
 			wsConnected = false;
-			if (event.code !== 1000) {
-				setTimeout(connectWS, 3000);
+			if (event.code !== 1000 && !streamEnded) {
+				reconnectTimer = setTimeout(connectWS, 3000);
 			}
 		};
 	}
@@ -86,6 +99,7 @@
 	});
 
 	onDestroy(() => {
+		if (reconnectTimer) clearTimeout(reconnectTimer);
 		if (ws) {
 			ws.onclose = null;
 			ws.close(1000);

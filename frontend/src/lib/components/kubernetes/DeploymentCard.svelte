@@ -2,6 +2,7 @@
 	import type { KubeDeployment } from '$lib/api/kubernetes';
 	import { scaleDeployment } from '$lib/api/kubernetes';
 	import { addToast } from '$lib/stores/ui';
+	import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte';
 
 	let {
 		deployment,
@@ -10,9 +11,20 @@
 	}: { deployment: KubeDeployment; onScale: () => void; context?: string } = $props();
 
 	let scaling = $state(false);
+	let confirmZero = $state(false);
+
+	function requestScale(newVal: number) {
+		// Scaling to zero takes the workload offline — make that one deliberate.
+		if (newVal === 0) {
+			confirmZero = true;
+			return;
+		}
+		updateScale(newVal);
+	}
 
 	async function updateScale(newVal: number) {
 		if (newVal < 0) return;
+		confirmZero = false;
 		scaling = true;
 		try {
 			const res = await scaleDeployment(deployment.namespace, deployment.name, newVal, context || undefined);
@@ -88,7 +100,7 @@
 		<div class="flex items-center gap-2">
 			<button 
 				class="w-6 h-6 rounded bg-white/5 border border-white/10 flex items-center justify-center text-white text-xs hover:bg-white/10 transition-colors disabled:opacity-50 font-bold"
-				onclick={() => updateScale(deployment.desired - 1)}
+				onclick={() => requestScale(deployment.desired - 1)}
 				disabled={scaling || deployment.desired <= 0}
 			>
 				-
@@ -96,7 +108,7 @@
 			<span class="text-xs text-white font-mono min-w-[20px] text-center">{deployment.desired}</span>
 			<button 
 				class="w-6 h-6 rounded bg-white/5 border border-white/10 flex items-center justify-center text-white text-xs hover:bg-white/10 transition-colors disabled:opacity-50 font-bold"
-				onclick={() => updateScale(deployment.desired + 1)}
+				onclick={() => requestScale(deployment.desired + 1)}
 				disabled={scaling}
 			>
 				+
@@ -104,3 +116,12 @@
 		</div>
 	</div>
 </div>
+
+<ConfirmDialog
+	open={confirmZero}
+	title="Scale to zero?"
+	message={`This stops all replicas of ${deployment.namespace}/${deployment.name}. The workload will be offline until scaled back up.`}
+	confirmLabel="Scale to 0"
+	onconfirm={() => updateScale(0)}
+	oncancel={() => (confirmZero = false)}
+/>
