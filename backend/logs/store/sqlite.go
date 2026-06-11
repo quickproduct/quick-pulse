@@ -343,9 +343,14 @@ func (s *SQLiteStore) Get(ctx context.Context, id int64) (logs.Entry, error) {
 func (s *SQLiteStore) Sources(ctx context.Context) (logs.SourcesResponse, error) {
 	r := logs.SourcesResponse{Platforms: []string{"docker", "k8s"}}
 
+	// Bound the DISTINCT scans to the last 24h: dropdowns only need sources
+	// that are currently emitting, and an unbounded DISTINCT walks the whole
+	// table once it grows past the retention window.
+	since := nowMS() - 24*3_600_000
+
 	q := func(col string) ([]string, error) {
 		rows, err := s.db.QueryContext(ctx,
-			"SELECT DISTINCT "+col+" FROM logs WHERE "+col+" IS NOT NULL ORDER BY "+col+" LIMIT 200")
+			"SELECT DISTINCT "+col+" FROM logs WHERE ts >= ? AND "+col+" IS NOT NULL ORDER BY "+col+" LIMIT 200", since)
 		if err != nil {
 			return nil, err
 		}
@@ -476,24 +481,39 @@ func (s *SQLiteStore) Vacuum(ctx context.Context, settings logs.Settings) (int64
 
 	var total int64
 
+	// deleteBefore removes log rows older than cutoff together with their
+	// FTS rows in one transaction. FTS5 with content='logs' uses an external
+	// content table, so a failure between the two deletes would orphan FTS
+	// rows — the transaction makes them atomic.
+	deleteBefore := func(cutoff int64) (int64, error) {
+		tx, err := s.db.BeginTx(ctx, nil)
+		if err != nil {
+			return 0, err
+		}
+		defer tx.Rollback()
+		res, err := tx.ExecContext(ctx, `DELETE FROM logs WHERE ts < ?`, cutoff)
+		if err != nil {
+			return 0, err
+		}
+		n, _ := res.RowsAffected()
+		if n > 0 {
+			if _, err := tx.ExecContext(ctx,
+				`DELETE FROM logs_fts WHERE rowid NOT IN (SELECT id FROM logs)`,
+			); err != nil {
+				return 0, err
+			}
+		}
+		return n, tx.Commit()
+	}
+
 	// Age-based eviction.
 	if settings.RetentionHours > 0 {
 		cutoff := nowMS() - int64(settings.RetentionHours)*3_600_000
-		res, err := s.db.ExecContext(ctx, `DELETE FROM logs WHERE ts < ?`, cutoff)
+		n, err := deleteBefore(cutoff)
 		if err != nil {
 			return total, fmt.Errorf("age delete: %w", err)
 		}
-		n, _ := res.RowsAffected()
 		total += n
-		// FTS5 with content='logs' uses an external content table so we
-		// must explicitly drop the matching FTS rows.
-		if n > 0 {
-			if _, err := s.db.ExecContext(ctx,
-				`DELETE FROM logs_fts WHERE rowid NOT IN (SELECT id FROM logs)`,
-			); err != nil {
-				return total, fmt.Errorf("fts delete: %w", err)
-			}
-		}
 	}
 
 	// Size-based eviction. Use page_count * page_size as a proxy for file
@@ -508,12 +528,8 @@ func (s *SQLiteStore) Vacuum(ctx context.Context, settings logs.Settings) (int64
 				if err := s.db.QueryRowContext(ctx,
 					`SELECT ts FROM logs ORDER BY ts ASC LIMIT 1 OFFSET (SELECT COUNT(*)/20 FROM logs)`,
 				).Scan(&deleteUntil); err == nil && deleteUntil > 0 {
-					res, err := s.db.ExecContext(ctx, `DELETE FROM logs WHERE ts < ?`, deleteUntil)
-					if err == nil {
-						n, _ := res.RowsAffected()
+					if n, err := deleteBefore(deleteUntil); err == nil {
 						total += n
-						_, _ = s.db.ExecContext(ctx,
-							`DELETE FROM logs_fts WHERE rowid NOT IN (SELECT id FROM logs)`)
 					}
 				}
 			}

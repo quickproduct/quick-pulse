@@ -360,8 +360,16 @@ func (c *K8sCollector) consumePodStream(ctx context.Context, stream interface {
 			continue
 		}
 		c.registry.Touch(meta.SourceID)
+		// Resume from the kubelet's own timestamp prefix (we request
+		// Timestamps:true), not the parsed entry TS: parsed timestamps can
+		// come from log content and a backdated line would rewind SinceTime,
+		// re-streaming old logs on every reconnect.
+		if i := strings.IndexByte(line, ' '); i > 0 {
+			if ts, err := time.Parse(time.RFC3339Nano, line[:i]); err == nil {
+				last = ts
+			}
+		}
 		entry := parser.Parse(meta, line, time.Now())
-		last = time.UnixMilli(entry.TS)
 		for _, finished := range c.joiner.Feed(meta.SourceID, entry) {
 			c.submit.Submit(finished)
 		}

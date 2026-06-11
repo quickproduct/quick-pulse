@@ -153,9 +153,18 @@ func (i *Ingest) run(ctx context.Context) {
 		if len(buf) == 0 {
 			return
 		}
-		writeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		ids, err := i.store.Insert(writeCtx, buf)
-		cancel()
+		insert := func() ([]int64, error) {
+			writeCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			return i.store.Insert(writeCtx, buf)
+		}
+		ids, err := insert()
+		if err != nil {
+			// One bounded retry: a lock spike (janitor vacuum, checkpoint)
+			// shouldn't cost a whole batch.
+			time.Sleep(100 * time.Millisecond)
+			ids, err = insert()
+		}
 		if err != nil {
 			log.Printf("[logs/ingest] flush failed (%s, n=%d): %v", reason, len(buf), err)
 			// Drop the batch rather than retry forever — keeps the

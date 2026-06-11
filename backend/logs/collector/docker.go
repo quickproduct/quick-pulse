@@ -289,10 +289,17 @@ func (c *DockerCollector) consume(ctx context.Context, rdr io.ReadCloser, meta p
 		}
 		c.registry.Touch(meta.SourceID)
 
+		// Update `since` from the daemon's own timestamp prefix (we request
+		// Timestamps:true) so reconnect picks up where we left off. The parsed
+		// entry TS can come from the log content itself — a backdated line
+		// would rewind the cursor and re-stream old logs on reconnect.
+		if i := strings.IndexByte(line, ' '); i > 0 {
+			if _, err := time.Parse(time.RFC3339Nano, line[:i]); err == nil {
+				*since = line[:i]
+			}
+		}
+
 		entry := parser.Parse(meta, line, time.Now())
-		// Update `since` so reconnect picks up where we left off.
-		// Docker accepts both unix timestamps and RFC3339.
-		*since = formatRFC3339Nano(entry.TS)
 
 		for _, finished := range c.joiner.Feed(meta.SourceID, entry) {
 			c.submit.Submit(finished)
@@ -312,8 +319,4 @@ func sleepCtx(ctx context.Context, d time.Duration) bool {
 	case <-t.C:
 		return true
 	}
-}
-
-func formatRFC3339Nano(unixMillis int64) string {
-	return time.UnixMilli(unixMillis).UTC().Format(time.RFC3339Nano)
 }
