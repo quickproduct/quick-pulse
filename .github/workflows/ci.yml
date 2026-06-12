@@ -18,6 +18,16 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.25'
+          cache-dependency-path: backend/go.sum
+
+      # main.go embeds the SPA via `//go:embed all:frontend/build`, which is
+      # produced by the frontend build (see Dockerfile) and not committed.
+      # vet/test only need the path to exist, so stub it instead of pulling
+      # Node into this job.
+      - name: Stub embedded frontend build
+        run: |
+          mkdir -p backend/frontend/build
+          echo '<!doctype html><title>stub</title>' > backend/frontend/build/index.html
 
       - name: Run Go Vet
         run: |
