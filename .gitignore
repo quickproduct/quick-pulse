@@ -184,3 +184,11 @@ state/
 *.swo
 *~
 .tern-port
+
+# Embedded frontend build staged for go:embed
+!backend/internal/static/build/
+!backend/internal/static/build/**
+
+# Local recovery artifacts
+infra/.env.dev.backup.*
+quickpulse.db.bak*

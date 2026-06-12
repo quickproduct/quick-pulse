@@ -15,10 +15,10 @@ WORKDIR /app
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 COPY backend/ ./
-# Copy pre-built frontend files to backend/frontend/build
-COPY --from=frontend-builder /app/build ./frontend/build
-# Compile Go backend as a statically linked binary (CGO_ENABLED=0 since modernc.org/sqlite is CGO-free)
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o qp-backend main.go
+# Copy pre-built frontend into the embed location (internal/static/build)
+COPY --from=frontend-builder /app/build ./internal/static/build
+# Compile Go backend as a statically linked binary (CGO_ENABLED=0 since glebarez/modernc sqlite is CGO-free)
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o qp-backend ./cmd/server
 
 # ── Stage 3: Minimal Runtime ──────────────────────────────────────────────
 FROM alpine:3.19 AS runtime

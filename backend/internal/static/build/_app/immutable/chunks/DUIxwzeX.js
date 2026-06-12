@@ -1,0 +1,1 @@
+import{et as e}from"./Bvh7Wy9X.js";import"./DOW5vBl5.js";var t=e([]);function n(e,n=`info`){let r=Math.random().toString(36).slice(2);t.update(t=>[...t,{id:r,message:e,type:n}]),setTimeout(()=>{t.update(e=>e.filter(e=>e.id!==r))},4e3)}export{t as n,n as t};
