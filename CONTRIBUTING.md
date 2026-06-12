@@ -22,9 +22,12 @@ To configure the application locally:
    ```
 3. Run the Go server:
    ```bash
+   mkdir -p backend/frontend/build
+   printf '<!doctype html><title>QuickPulse dev</title>' > backend/frontend/build/index.html
    cd backend
    go run main.go
    ```
+   The local stub satisfies Go's embedded frontend path. For a full production-like binary, run the frontend build and copy `frontend/build` to `backend/frontend/build`.
 
 ### 2. Frontend (SvelteKit)
 1. Ensure you have **Node.js 20+** installed.
@@ -59,8 +62,10 @@ To configure the application locally:
 1. Fork the repository and create your branch from `main`.
 2. Write unit tests for new logic where possible.
 3. Verify that the build completes successfully:
-   - Go: `cd backend && go test ./...`
-   - Svelte: `cd frontend && npm run check && npm run build`
+   - Frontend: `cd frontend && npm run check && npm run build`
+   - Go embed fixture: `mkdir -p backend/frontend/build && cp -R frontend/build/* backend/frontend/build/`
+   - Go: `cd backend && go vet ./... && go test ./...`
+   - Compose: `docker compose config`
 4. Follow commit naming conventions:
    - `feat: ...` for new features
    - `fix: ...` for bug fixes

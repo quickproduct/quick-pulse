@@ -19,4 +19,4 @@ Initial release of consolidated production-grade QuickPulse.
 - Parameter names `{id}` matching bugs in alert update/delete and alert acknowledge routing.
 - WebSocket authorization privilege gaps for deactivated accounts.
 - Sanitized stack names across all routes to prevent path traversals.
-- Fixed broken environment setup and validation bash scripts by recreating `/infra` configs.
+- Removed stale environment setup and validation scripts from the retired `/infra` deployment layout.

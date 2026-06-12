@@ -46,12 +46,14 @@ The user interface is built using SvelteKit compile-to-static adapter and Skelet
 
 ## Deployment & Setup
 
-Refer to the root [README.md](../README.md) for quick-start Docker instructions.
+Refer to the root [README.md](../README.md) for quick-start Docker instructions. The supported production path is the consolidated root `Dockerfile` and `docker-compose.yml`; there is no separate frontend container in the default deployment.
 
 ### Environment Configuration
 The application reads settings from the environment. Key variables include:
 - `PORT` (Default: `8000`): Port Go backend serves on.
 - `SQLITE_DB_PATH` (Default: `quickpulse.db`): Path to SQLite database.
 - `JWT_SECRET_KEY` (Required): String key to sign access/refresh tokens.
+- `CORS_ALLOW_ORIGIN` (Default: empty): Optional external origin for separately hosted UIs. Leave empty for same-origin requests.
 - `ALLOW_REGISTRATION` (Default: `true`): Toggles open registration for administrators.
 - `METRICS_RETENTION_DAYS` (Default: `30`): Number of days to store host metrics history.
+- `KUBECONFIG` (Default: mounted `~/.kube/config`): Kubernetes client configuration path used by Kubernetes views and log collection.
