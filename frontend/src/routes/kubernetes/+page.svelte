@@ -20,6 +20,19 @@
 	let selectedNamespace = $state<string>('');
 	let activeTab = $state<'pods' | 'deployments' | 'services' | 'events'>('pods');
 	let loading = $state(true);
+	let error = $state('');
+	let search = $state('');
+	let warningsOnly = $state(false);
+
+	const visiblePods = $derived(
+		search ? pods.filter((p) => p.name.toLowerCase().includes(search.toLowerCase())) : pods
+	);
+	const visibleDeployments = $derived(
+		search ? deployments.filter((d) => d.name.toLowerCase().includes(search.toLowerCase())) : deployments
+	);
+	const visibleServices = $derived(
+		search ? services.filter((s) => s.name.toLowerCase().includes(search.toLowerCase())) : services
+	);
 
 	// Empty string = "use kubeconfig current-context" on the backend.
 	// We always pass selectedContext through so the dropdown choice is honored.
@@ -38,10 +51,12 @@
 				k8s.getDeployments(nsFilter, ctx),
 				k8s.getServices(nsFilter, ctx),
 				k8s.getNamespaces(ctx),
-				k8s.getEvents(nsFilter, ctx)
+				k8s.getEvents(nsFilter, ctx, warningsOnly ? 'Warning' : undefined)
 			]);
-		} catch (err) {
+			error = '';
+		} catch (err: any) {
 			console.error('Failed to fetch K8s data', err);
+			error = err?.message || 'Failed to fetch cluster data';
 		} finally {
 			loading = false;
 		}
@@ -85,18 +100,16 @@
 			selectedContext = pickInitialContext(contexts);
 			await fetchData();
 		})();
-		const interval = setInterval(fetchData, 10000); // Refresh every 10s
+		// Refresh every 10s, but not while the tab is in the background —
+		// no one is looking, and it doubles the load on the API server.
+		const interval = setInterval(() => {
+			if (!document.hidden) fetchData();
+		}, 10000);
 		return () => clearInterval(interval);
-	});
-
-	$effect(() => {
-		if (selectedNamespace !== undefined) {
-			fetchData();
-		}
 	});
 </script>
 
-<div class="p-6 max-w-7xl mx-auto">
+<div class="max-w-7xl mx-auto">
 	<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
 		<div>
 			<h1 class="text-3xl font-bold text-white tracking-tight">Kubernetes Dashboard</h1>
@@ -119,6 +132,7 @@
 
 			<select
 				bind:value={selectedNamespace}
+				onchange={fetchData}
 				class="bg-white/5 border border-white/10 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 font-mono"
 			>
 				<option value="">All Namespaces</option>
@@ -129,7 +143,7 @@
 
 			<button 
 				onclick={fetchData}
-				class="qp-button-secondary py-2.5 px-4 flex items-center gap-2"
+				class="qp-btn qp-btn-ghost flex items-center gap-2"
 				disabled={loading}
 			>
 				<svg class="w-4 h-4 {loading ? 'animate-spin' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,9 +154,25 @@
 		</div>
 	</div>
 
+	{#if error}
+		<div class="mb-6 flex items-center justify-between gap-4 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+			<span>{error}</span>
+			<button class="qp-btn qp-btn-ghost" onclick={fetchData} disabled={loading}>Retry</button>
+		</div>
+	{/if}
+
 	{#if overview}
 		<ClusterOverview {overview} />
 	{/if}
+
+	<div class="mb-4">
+		<input
+			type="search"
+			bind:value={search}
+			placeholder="Filter by name…"
+			class="w-full md:w-80 bg-white/5 border border-white/10 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 font-mono"
+		/>
+	</div>
 
 	<!-- Tabs -->
 	<div class="mb-6 border-b border-white/10">
@@ -183,12 +213,14 @@
 							</tr>
 						</thead>
 						<tbody>
-							{#each pods as pod}
+							{#each visiblePods as pod}
 								<PodRow {pod} onDelete={fetchData} context={selectedContext} />
 							{/each}
-							{#if pods.length === 0}
+							{#if visiblePods.length === 0}
 								<tr>
-									<td colspan="8" class="px-4 py-8 text-center text-[var(--qp-text-muted)]">No pods found in this namespace</td>
+									<td colspan="8" class="px-4 py-8 text-center text-[var(--qp-text-muted)]">
+										{search ? `No pods matching "${search}"` : 'No pods found in this namespace'}
+									</td>
 								</tr>
 							{/if}
 						</tbody>
@@ -196,10 +228,10 @@
 				</div>
 			{:else if activeTab === 'deployments'}
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-					{#each deployments as deployment}
+					{#each visibleDeployments as deployment}
 						<DeploymentCard {deployment} onScale={fetchData} context={selectedContext} />
 					{/each}
-					{#if deployments.length === 0}
+					{#if visibleDeployments.length === 0}
 						<div class="col-span-full qp-card p-12 text-center text-[var(--qp-text-muted)]">
 							No deployments found in this namespace
 						</div>
@@ -219,10 +251,10 @@
 							</tr>
 						</thead>
 						<tbody>
-							{#each services as service}
+							{#each visibleServices as service}
 								<ServiceRow {service} />
 							{/each}
-							{#if services.length === 0}
+							{#if visibleServices.length === 0}
 								<tr>
 									<td colspan="6" class="px-4 py-8 text-center text-[var(--qp-text-muted)]">No services found in this namespace</td>
 								</tr>
@@ -231,6 +263,10 @@
 					</table>
 				</div>
 			{:else if activeTab === 'events'}
+				<label class="mb-3 flex w-fit cursor-pointer items-center gap-2 text-sm text-[var(--qp-text-muted)]">
+					<input type="checkbox" bind:checked={warningsOnly} onchange={fetchData} />
+					Warnings only
+				</label>
 				<EventsList {events} />
 			{/if}
 		</div>

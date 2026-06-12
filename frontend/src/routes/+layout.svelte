@@ -7,6 +7,7 @@
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import TopNav from '$lib/components/layout/TopNav.svelte';
 	import Toast from '$lib/components/shared/Toast.svelte';
+	import { browser } from '$app/environment';
 
 	let { children } = $props();
 	let loaded = $state(false);
@@ -17,6 +18,16 @@
 	onMount(async () => {
 		await initAuth();
 		loaded = true;
+	});
+
+	$effect(() => {
+		if (loaded && browser) {
+			if (!$isAuthenticated && !isPublicPage) {
+				goto('/login');
+			} else if ($isAuthenticated && isLoginPage) {
+				goto('/');
+			}
+		}
 	});
 </script>
 
@@ -36,21 +47,19 @@
 			<span class="text-[var(--qp-text-muted)]">Loading...</span>
 		</div>
 	</div>
-{:else if isPublicPage}
-	{@render children()}
-{:else if $isAuthenticated}
-	<div class="flex min-h-screen">
-		<Sidebar />
-		<div class="flex-1 flex flex-col min-w-0">
-			<TopNav />
-			<main class="flex-1 p-6 overflow-y-auto qp-scrollbar">
-				{@render children()}
-			</main>
+{:else if isPublicPage || $isAuthenticated}
+	{#if isPublicPage}
+		{@render children()}
+	{:else}
+		<div class="flex min-h-screen">
+			<Sidebar />
+			<div class="flex-1 flex flex-col min-w-0">
+				<TopNav />
+				<main class="flex-1 p-6 overflow-y-auto qp-scrollbar">
+					{@render children()}
+				</main>
+			</div>
 		</div>
-	</div>
-	<Toast />
-{:else}
-	{#if typeof window !== 'undefined'}
-		{goto('/login')}
+		<Toast />
 	{/if}
 {/if}

@@ -16,6 +16,17 @@ import (
 	"quickpulse/backend/models"
 )
 
+func isValidStackName(name string) bool {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return false
+	}
+	if strings.Contains(name, "..") || strings.ContainsAny(name, "/\\") {
+		return false
+	}
+	return true
+}
+
 // ListStacksHandler handles GET /api/v1/stacks
 func ListStacksHandler(w http.ResponseWriter, r *http.Request) {
 	cli, err := getDockerClient()
@@ -139,8 +150,8 @@ func ListStacksHandler(w http.ResponseWriter, r *http.Request) {
 // GetStackHandler handles GET /api/v1/stacks/{name}
 func GetStackHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
-	if name == "" {
-		WriteError(w, http.StatusBadRequest, "Missing stack name")
+	if !isValidStackName(name) {
+		WriteError(w, http.StatusBadRequest, "Invalid stack name")
 		return
 	}
 
@@ -223,8 +234,8 @@ func GetStackHandler(w http.ResponseWriter, r *http.Request) {
 // StartStackHandler handles POST /api/v1/stacks/{name}/start
 func StartStackHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
-	if name == "" {
-		WriteError(w, http.StatusBadRequest, "Missing stack name")
+	if !isValidStackName(name) {
+		WriteError(w, http.StatusBadRequest, "Invalid stack name")
 		return
 	}
 
@@ -265,8 +276,8 @@ func StartStackHandler(w http.ResponseWriter, r *http.Request) {
 // StopStackHandler handles POST /api/v1/stacks/{name}/stop
 func StopStackHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
-	if name == "" {
-		WriteError(w, http.StatusBadRequest, "Missing stack name")
+	if !isValidStackName(name) {
+		WriteError(w, http.StatusBadRequest, "Invalid stack name")
 		return
 	}
 
@@ -307,8 +318,8 @@ func StopStackHandler(w http.ResponseWriter, r *http.Request) {
 // RestartStackHandler handles POST /api/v1/stacks/{name}/restart
 func RestartStackHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
-	if name == "" {
-		WriteError(w, http.StatusBadRequest, "Missing stack name")
+	if !isValidStackName(name) {
+		WriteError(w, http.StatusBadRequest, "Invalid stack name")
 		return
 	}
 
@@ -377,8 +388,8 @@ func getComposeFilePath(dir string) string {
 // GetStackConfigHandler handles GET /api/v1/stacks/{name}/config
 func GetStackConfigHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
-	if name == "" {
-		WriteError(w, http.StatusBadRequest, "Missing stack name")
+	if !isValidStackName(name) {
+		WriteError(w, http.StatusBadRequest, "Invalid stack name")
 		return
 	}
 
@@ -408,8 +419,8 @@ type SaveStackConfigRequest struct {
 // SaveStackConfigHandler handles POST /api/v1/stacks/{name}/config
 func SaveStackConfigHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
-	if name == "" {
-		WriteError(w, http.StatusBadRequest, "Missing stack name")
+	if !isValidStackName(name) {
+		WriteError(w, http.StatusBadRequest, "Invalid stack name")
 		return
 	}
 
@@ -450,14 +461,7 @@ func CreateStackHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req.Name = strings.TrimSpace(req.Name)
-	if req.Name == "" {
-		WriteError(w, http.StatusBadRequest, "Stack name is required")
-		return
-	}
-
-	// Validate stack name to prevent directory traversal
-	if strings.Contains(req.Name, "..") || strings.ContainsAny(req.Name, "/\\") {
+	if !isValidStackName(req.Name) {
 		WriteError(w, http.StatusBadRequest, "Invalid stack name")
 		return
 	}
@@ -505,8 +509,8 @@ func (fw *flushWriter) Write(p []byte) (n int, err error) {
 // DeployStackHandler handles POST /api/v1/stacks/{name}/deploy
 func DeployStackHandler(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
-	if name == "" {
-		WriteError(w, http.StatusBadRequest, "Missing stack name")
+	if !isValidStackName(name) {
+		WriteError(w, http.StatusBadRequest, "Invalid stack name")
 		return
 	}
 

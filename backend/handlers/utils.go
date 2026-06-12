@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"quickpulse/backend/auth"
 	"quickpulse/backend/db"
@@ -13,6 +14,13 @@ import (
 type contextKey string
 
 const UserIDKey contextKey = "userId"
+
+// dockerCtx bounds a single Docker API call so a hung daemon cannot wedge a
+// handler. 60s leaves room for ContainerStop/Restart, which block for the
+// container's stop timeout (10s default) before SIGKILL.
+func dockerCtx(r *http.Request) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(r.Context(), 60*time.Second)
+}
 
 // WriteJSON sends a JSON response with status code
 func WriteJSON(w http.ResponseWriter, status int, data interface{}) {
@@ -37,19 +45,24 @@ func ParseJSON(r *http.Request, data interface{}) error {
 // AuthMiddleware verifies the JWT access token and adds User ID to context
 func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var token string
 		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			WriteError(w, http.StatusUnauthorized, "Missing authorization header")
+		if authHeader != "" {
+			parts := strings.Split(authHeader, " ")
+			if len(parts) == 2 && strings.ToLower(parts[0]) == "bearer" {
+				token = parts[1]
+			}
+		}
+
+		if token == "" {
+			token = r.URL.Query().Get("token")
+		}
+
+		if token == "" {
+			WriteError(w, http.StatusUnauthorized, "Missing authorization header or token query parameter")
 			return
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-			WriteError(w, http.StatusUnauthorized, "Invalid authorization header format")
-			return
-		}
-
-		token := parts[1]
 		claims, err := auth.VerifyToken(token, "access")
 		if err != nil {
 			WriteError(w, http.StatusUnauthorized, "Invalid or expired token")

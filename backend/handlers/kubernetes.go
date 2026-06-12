@@ -79,195 +79,6 @@ func disconnectedReason(err error) string {
 	return err.Error()
 }
 
-var namespaces = []string{"default", "kube-system", "monitoring", "production", "staging"}
-
-var nodes = []map[string]interface{}{
-	{
-		"name": "node-01", "role": "control-plane", "status": "Ready", "version": "v1.29.3",
-		"cpu": "4", "memory": "8Gi", "os": "Ubuntu 22.04", "arch": "amd64",
-		"age_seconds": 3600000, "conditions": []map[string]string{{"type": "Ready", "status": "True"}},
-	},
-	{
-		"name": "node-02", "role": "worker", "status": "Ready", "version": "v1.29.3",
-		"cpu": "8", "memory": "16Gi", "os": "Ubuntu 22.04", "arch": "amd64",
-		"age_seconds": 3598000, "conditions": []map[string]string{{"type": "Ready", "status": "True"}},
-	},
-	{
-		"name": "node-03", "role": "worker", "status": "Ready", "version": "v1.29.3",
-		"cpu": "8", "memory": "16Gi", "os": "Ubuntu 22.04", "arch": "amd64",
-		"age_seconds": 3550000, "conditions": []map[string]string{{"type": "Ready", "status": "True"}},
-	},
-}
-
-var pods = []map[string]interface{}{
-	{
-		"name": "quickpulse-backend-7d9f8b-kxp2l", "namespace": "production", "status": "Running",
-		"ready": "1/1", "restarts": 0, "age_seconds": 86400, "node": "node-02",
-		"cpu": "45m", "memory": "128Mi", "image": "quickpulse/backend:latest",
-		"conditions": []map[string]string{{"type": "Ready", "status": "True"}},
-	},
-	{
-		"name": "quickpulse-frontend-5c7d9f-mn4rs", "namespace": "production", "status": "Running",
-		"ready": "1/1", "restarts": 0, "age_seconds": 86400, "node": "node-03",
-		"cpu": "12m", "memory": "64Mi", "image": "quickpulse/frontend:latest",
-		"conditions": []map[string]string{{"type": "Ready", "status": "True"}},
-	},
-	{
-		"name": "quickpulse-db-0", "namespace": "production", "status": "Running",
-		"ready": "1/1", "restarts": 0, "age_seconds": 172800, "node": "node-02",
-		"cpu": "180m", "memory": "512Mi", "image": "timescale/timescaledb:latest-pg16",
-		"conditions": []map[string]string{{"type": "Ready", "status": "True"}},
-	},
-	{
-		"name": "quickpulse-redis-0", "namespace": "production", "status": "Running",
-		"ready": "1/1", "restarts": 1, "age_seconds": 172800, "node": "node-03",
-		"cpu": "8m", "memory": "32Mi", "image": "redis:7-alpine",
-		"conditions": []map[string]string{{"type": "Ready", "status": "True"}},
-	},
-	{
-		"name": "prometheus-0", "namespace": "monitoring", "status": "Running",
-		"ready": "1/1", "restarts": 0, "age_seconds": 604800, "node": "node-02",
-		"cpu": "220m", "memory": "384Mi", "image": "prom/prometheus:v2.52.0",
-		"conditions": []map[string]string{{"type": "Ready", "status": "True"}},
-	},
-	{
-		"name": "grafana-6f8b9d-wr5kp", "namespace": "monitoring", "status": "Running",
-		"ready": "1/1", "restarts": 0, "age_seconds": 604800, "node": "node-03",
-		"cpu": "35m", "memory": "96Mi", "image": "grafana/grafana:10.4.2",
-		"conditions": []map[string]string{{"type": "Ready", "status": "True"}},
-	},
-	{
-		"name": "coredns-7db6d8ff4-nt9zp", "namespace": "kube-system", "status": "Running",
-		"ready": "2/2", "restarts": 0, "age_seconds": 3600000, "node": "node-01",
-		"cpu": "6m", "memory": "18Mi", "image": "registry.k8s.io/coredns/coredns:v1.11.3",
-		"conditions": []map[string]string{{"type": "Ready", "status": "True"}},
-	},
-	{
-		"name": "kube-apiserver-node-01", "namespace": "kube-system", "status": "Running",
-		"ready": "1/1", "restarts": 2, "age_seconds": 3600000, "node": "node-01",
-		"cpu": "95m", "memory": "256Mi", "image": "registry.k8s.io/kube-apiserver:v1.29.3",
-		"conditions": []map[string]string{{"type": "Ready", "status": "True"}},
-	},
-	{
-		"name": "staging-api-deploy-78c9d-qp2kr", "namespace": "staging", "status": "Pending",
-		"ready": "0/1", "restarts": 0, "age_seconds": 120, "node": "",
-		"cpu": "0m", "memory": "0Mi", "image": "quickpulse/backend:edge",
-		"conditions": []map[string]string{{"type": "PodScheduled", "status": "False", "reason": "Unschedulable"}},
-	},
-	{
-		"name": "batch-job-xkcd9-wrkr", "namespace": "default", "status": "Failed",
-		"ready": "0/1", "restarts": 5, "age_seconds": 3600, "node": "node-02",
-		"cpu": "0m", "memory": "0Mi", "image": "quickpulse/batch:1.2.0",
-		"conditions": []map[string]string{{"type": "Ready", "status": "False"}},
-	},
-}
-
-var deployments = []map[string]interface{}{
-	{
-		"name": "quickpulse-backend", "namespace": "production",
-		"desired": 2, "ready": 2, "available": 2, "updated": 2,
-		"age_seconds": 86400, "image": "quickpulse/backend:latest", "strategy": "RollingUpdate",
-	},
-	{
-		"name": "quickpulse-frontend", "namespace": "production",
-		"desired": 2, "ready": 2, "available": 2, "updated": 2,
-		"age_seconds": 86400, "image": "quickpulse/frontend:latest", "strategy": "RollingUpdate",
-	},
-	{
-		"name": "grafana", "namespace": "monitoring",
-		"desired": 1, "ready": 1, "available": 1, "updated": 1,
-		"age_seconds": 604800, "image": "grafana/grafana:10.4.2", "strategy": "Recreate",
-	},
-	{
-		"name": "coredns", "namespace": "kube-system",
-		"desired": 2, "ready": 2, "available": 2, "updated": 2,
-		"age_seconds": 3600000, "image": "registry.k8s.io/coredns/coredns:v1.11.3", "strategy": "RollingUpdate",
-	},
-	{
-		"name": "staging-api-deploy", "namespace": "staging",
-		"desired": 3, "ready": 1, "available": 1, "updated": 3,
-		"age_seconds": 7200, "image": "quickpulse/backend:edge", "strategy": "RollingUpdate",
-	},
-}
-
-var services = []map[string]interface{}{
-	{
-		"name": "quickpulse-backend", "namespace": "production", "type": "ClusterIP",
-		"cluster_ip": "10.96.45.12", "external_ip": nil,
-		"ports":    []map[string]interface{}{{"port": 8000, "target_port": 8000, "protocol": "TCP"}},
-		"selector": map[string]string{"app": "quickpulse-backend"}, "age_seconds": 86400,
-	},
-	{
-		"name": "quickpulse-frontend", "namespace": "production", "type": "LoadBalancer",
-		"cluster_ip": "10.96.45.13", "external_ip": "203.0.113.42",
-		"ports":    []map[string]interface{}{{"port": 80, "target_port": 80, "protocol": "TCP"}},
-		"selector": map[string]string{"app": "quickpulse-frontend"}, "age_seconds": 86400,
-	},
-	{
-		"name": "quickpulse-db", "namespace": "production", "type": "ClusterIP",
-		"cluster_ip": "10.96.45.14", "external_ip": nil,
-		"ports":    []map[string]interface{}{{"port": 5432, "target_port": 5432, "protocol": "TCP"}},
-		"selector": map[string]string{"app": "quickpulse-db"}, "age_seconds": 172800,
-	},
-	{
-		"name": "quickpulse-redis", "namespace": "production", "type": "ClusterIP",
-		"cluster_ip": "10.96.45.15", "external_ip": nil,
-		"ports":    []map[string]interface{}{{"port": 6379, "target_port": 6379, "protocol": "TCP"}},
-		"selector": map[string]string{"app": "quickpulse-redis"}, "age_seconds": 172800,
-	},
-	{
-		"name": "prometheus", "namespace": "monitoring", "type": "NodePort",
-		"cluster_ip": "10.96.78.10", "external_ip": nil,
-		"ports":    []map[string]interface{}{{"port": 9090, "target_port": 9090, "node_port": 30090, "protocol": "TCP"}},
-		"selector": map[string]string{"app": "prometheus"}, "age_seconds": 604800,
-	},
-	{
-		"name": "grafana", "namespace": "monitoring", "type": "NodePort",
-		"cluster_ip": "10.96.78.11", "external_ip": nil,
-		"ports":    []map[string]interface{}{{"port": 3000, "target_port": 3000, "node_port": 30030, "protocol": "TCP"}},
-		"selector": map[string]string{"app": "grafana"}, "age_seconds": 604800,
-	},
-	{
-		"name": "kubernetes", "namespace": "default", "type": "ClusterIP",
-		"cluster_ip": "10.96.0.1", "external_ip": nil,
-		"ports":    []map[string]interface{}{{"port": 443, "target_port": 6443, "protocol": "TCP"}},
-		"selector": map[string]string{}, "age_seconds": 3600000,
-	},
-}
-
-var events = []map[string]interface{}{
-	{
-		"name": "quickpulse-backend.17d1f2a9b3", "namespace": "production",
-		"type": "Normal", "reason": "Pulled", "object": "Pod/quickpulse-backend-7d9f8b-kxp2l",
-		"message": "Successfully pulled image \"quickpulse/backend:latest\" in 2.341s",
-		"count":   1, "age_seconds": 86400,
-	},
-	{
-		"name": "quickpulse-backend.17d1f2b3c4", "namespace": "production",
-		"type": "Normal", "reason": "Started", "object": "Pod/quickpulse-backend-7d9f8b-kxp2l",
-		"message": "Started container quickpulse-backend",
-		"count":   1, "age_seconds": 86395,
-	},
-	{
-		"name": "staging-api.17d1f2d8e9", "namespace": "staging",
-		"type": "Warning", "reason": "FailedScheduling", "object": "Pod/staging-api-deploy-78c9d-qp2kr",
-		"message": "0/3 nodes are available: 3 Insufficient cpu. preemption: 0/3 nodes are available: 3 No preemption victims found for incoming pod.",
-		"count":   12, "age_seconds": 120,
-	},
-	{
-		"name": "batch-job.17d1f1a2b3", "namespace": "default",
-		"type": "Warning", "reason": "BackOff", "object": "Pod/batch-job-xkcd9-wrkr",
-		"message": "Back-off restarting failed container batch-worker in pod batch-job-xkcd9-wrkr_default",
-		"count":   5, "age_seconds": 3600,
-	},
-	{
-		"name": "quickpulse-redis.17d1f0c5d6", "namespace": "production",
-		"type": "Normal", "reason": "Killing", "object": "Pod/quickpulse-redis-0",
-		"message": "Stopping container redis",
-		"count":   1, "age_seconds": 172800,
-	},
-}
-
 // kubeconfigPath returns the path the backend uses for kubeconfig
 // (KUBECONFIG env var, falling back to ~/.kube/config). Returns "" if neither
 // is set/available.
@@ -342,6 +153,15 @@ func getK8sClientForContext(contextName string) (*kubernetes.Clientset, error) {
 // query param, or "" for current-context.
 func contextFromRequest(r *http.Request) string {
 	return r.URL.Query().Get("context")
+}
+
+// k8sCallTimeout bounds a single (non-streaming) Kubernetes API call so a
+// hung API server cannot wedge a handler. Streaming endpoints (log follow)
+// manage their own lifetimes and must not use this.
+const k8sCallTimeout = 15 * time.Second
+
+func k8sCtx(r *http.Request) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(r.Context(), k8sCallTimeout)
 }
 
 // KubeContextInfo describes a single kubeconfig context for the UI dropdown.
@@ -420,7 +240,8 @@ func K8sOverviewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := r.Context()
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
 	nodesList, err := clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		WriteJSON(w, http.StatusOK, disconnectedOverview(disconnectedReason(err)))
@@ -485,7 +306,9 @@ func K8sNodesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nodeList, err := clientset.CoreV1().Nodes().List(r.Context(), metav1.ListOptions{})
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	nodeList, err := clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		WriteJSON(w, http.StatusOK, []map[string]interface{}{})
 		return
@@ -542,7 +365,9 @@ func K8sPodsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	podList, err := clientset.CoreV1().Pods(ns).List(r.Context(), metav1.ListOptions{})
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	podList, err := clientset.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		WriteJSON(w, http.StatusOK, []map[string]interface{}{})
 		return
@@ -620,7 +445,9 @@ func K8sDeploymentsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deployList, err := clientset.AppsV1().Deployments(ns).List(r.Context(), metav1.ListOptions{})
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	deployList, err := clientset.AppsV1().Deployments(ns).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		WriteJSON(w, http.StatusOK, []map[string]interface{}{})
 		return
@@ -662,7 +489,9 @@ func K8sServicesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	svcList, err := clientset.CoreV1().Services(ns).List(r.Context(), metav1.ListOptions{})
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	svcList, err := clientset.CoreV1().Services(ns).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		WriteJSON(w, http.StatusOK, []map[string]interface{}{})
 		return
@@ -716,7 +545,9 @@ func K8sNamespacesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nsList, err := clientset.CoreV1().Namespaces().List(r.Context(), metav1.ListOptions{})
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	nsList, err := clientset.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		WriteJSON(w, http.StatusOK, []string{})
 		return
@@ -729,7 +560,8 @@ func K8sNamespacesHandler(w http.ResponseWriter, r *http.Request) {
 	WriteJSON(w, http.StatusOK, resp)
 }
 
-// K8sEventsHandler handles GET /api/v1/kubernetes/events
+// K8sEventsHandler handles GET /api/v1/kubernetes/events.
+// Optional query params: namespace, type (Normal|Warning), limit (default 200, max 1000).
 func K8sEventsHandler(w http.ResponseWriter, r *http.Request) {
 	ns := r.URL.Query().Get("namespace")
 	clientset, err := getK8sClientForContext(contextFromRequest(r))
@@ -738,7 +570,19 @@ func K8sEventsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	eventList, err := clientset.CoreV1().Events(ns).List(r.Context(), metav1.ListOptions{})
+	limit := 200
+	if l, err := strconv.Atoi(r.URL.Query().Get("limit")); err == nil && l > 0 {
+		limit = min(l, 1000)
+	}
+
+	listOpts := metav1.ListOptions{}
+	if evType := r.URL.Query().Get("type"); evType == "Normal" || evType == "Warning" {
+		listOpts.FieldSelector = "type=" + evType
+	}
+
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	eventList, err := clientset.CoreV1().Events(ns).List(ctx, listOpts)
 	if err != nil {
 		WriteJSON(w, http.StatusOK, []map[string]interface{}{})
 		return
@@ -775,6 +619,12 @@ func K8sEventsHandler(w http.ResponseWriter, r *http.Request) {
 			"age_seconds": age,
 		})
 	}
+	sort.Slice(resp, func(i, j int) bool {
+		return resp[i]["age_seconds"].(int) < resp[j]["age_seconds"].(int)
+	})
+	if len(resp) > limit {
+		resp = resp[:limit]
+	}
 	WriteJSON(w, http.StatusOK, resp)
 }
 
@@ -807,7 +657,8 @@ func GetK8sPodLogsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ctx := r.Context()
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
 	pod, err := clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
 	if err != nil {
 		WriteError(w, http.StatusNotFound, fmt.Sprintf("Pod %s not found in namespace %s: %v", podName, namespace, err))
@@ -914,13 +765,19 @@ func HandleWSK8sLogs(w http.ResponseWriter, r *http.Request) {
 	paused := false
 	var mu sync.Mutex
 
-	// Read logs and stream to WS
+	// Read logs and stream to WS. When the log stream ends (pod gone, kubelet
+	// rotation, API error) tell the client and close the conn so the command
+	// loop below unblocks instead of leaving a silent, dead "Live" view.
 	go func() {
 		reader := bufio.NewReader(stream)
 		for {
 			line, err := reader.ReadString('\n')
 			if err != nil {
-				break
+				if ctx.Err() == nil {
+					_ = conn.WriteJSON(map[string]interface{}{"eof": true})
+				}
+				_ = conn.Close()
+				return
 			}
 			line = strings.TrimSuffix(line, "\n")
 			line = strings.TrimSuffix(line, "\r")
@@ -934,7 +791,7 @@ func HandleWSK8sLogs(w http.ResponseWriter, r *http.Request) {
 					"line": line,
 				})
 				if err != nil {
-					break
+					return
 				}
 			}
 		}
@@ -979,6 +836,10 @@ func ScaleDeploymentHandler(w http.ResponseWriter, r *http.Request) {
 		WriteError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
+	if req.Replicas < 0 || req.Replicas > 1000 {
+		WriteError(w, http.StatusBadRequest, "Replicas must be between 0 and 1000")
+		return
+	}
 
 	clientset, err := getK8sClientForContext(contextFromRequest(r))
 	if err != nil {
@@ -986,15 +847,16 @@ func ScaleDeploymentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Direct API call
-	scale, err := clientset.AppsV1().Deployments(namespace).GetScale(r.Context(), name, metav1.GetOptions{})
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	scale, err := clientset.AppsV1().Deployments(namespace).GetScale(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to get deployment scale: %v", err))
 		return
 	}
 
 	scale.Spec.Replicas = int32(req.Replicas)
-	_, err = clientset.AppsV1().Deployments(namespace).UpdateScale(r.Context(), name, scale, metav1.UpdateOptions{})
+	_, err = clientset.AppsV1().Deployments(namespace).UpdateScale(ctx, name, scale, metav1.UpdateOptions{})
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to scale deployment: %v", err))
 		return
@@ -1021,11 +883,16 @@ func DeletePodHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Direct API call
-	gracePeriod := int64(0)
-	err = clientset.CoreV1().Pods(namespace).Delete(r.Context(), name, metav1.DeleteOptions{
-		GracePeriodSeconds: &gracePeriod,
-	})
+	// Graceful delete by default; ?force=true skips the grace period the way
+	// `kubectl delete --force --grace-period=0` does.
+	deleteOpts := metav1.DeleteOptions{}
+	if r.URL.Query().Get("force") == "true" {
+		gracePeriod := int64(0)
+		deleteOpts.GracePeriodSeconds = &gracePeriod
+	}
+	ctx, cancel := k8sCtx(r)
+	defer cancel()
+	err = clientset.CoreV1().Pods(namespace).Delete(ctx, name, deleteOpts)
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to delete pod: %v", err))
 		return

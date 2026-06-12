@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/websocket"
 
 	"quickpulse/backend/auth"
+	"quickpulse/backend/db"
 	"quickpulse/backend/ws"
 )
 
@@ -32,6 +33,11 @@ func validateWSAuth(r *http.Request) (string, bool) {
 	}
 	claims, err := auth.VerifyToken(token, "access")
 	if err != nil {
+		return "", false
+	}
+	var isActive int
+	err = db.DB.QueryRow("SELECT is_active FROM users WHERE id = ?", claims.Sub).Scan(&isActive)
+	if err != nil || isActive == 0 {
 		return "", false
 	}
 	return claims.Sub, true
@@ -206,10 +212,18 @@ func HandleWSContainerTerminal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, ok := validateWSAuth(r)
+	userID, ok := validateWSAuth(r)
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		_, _ = w.Write([]byte("Unauthorized"))
+		return
+	}
+
+	var role string
+	err := db.DB.QueryRow("SELECT role FROM users WHERE id = ?", userID).Scan(&role)
+	if err != nil || role != "admin" {
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = w.Write([]byte("Forbidden: Admin privileges required"))
 		return
 	}
 
@@ -312,4 +326,3 @@ func HandleWSContainerTerminal(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
-

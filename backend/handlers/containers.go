@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -50,7 +49,8 @@ func ListContainersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	ctx := context.Background()
+	ctx, cancel := dockerCtx(r)
+	defer cancel()
 	containers, err := cli.ContainerList(ctx, container.ListOptions{All: showAll})
 	if err != nil {
 		WriteError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to list containers: %v", err))
@@ -106,7 +106,8 @@ func InspectContainerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	ctx := context.Background()
+	ctx, cancel := dockerCtx(r)
+	defer cancel()
 	jsonInfo, err := cli.ContainerInspect(ctx, containerID)
 	if err != nil {
 		if client.IsErrNotFound(err) {
@@ -135,7 +136,8 @@ func StartContainerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	ctx := context.Background()
+	ctx, cancel := dockerCtx(r)
+	defer cancel()
 	err = cli.ContainerStart(ctx, containerID, container.StartOptions{})
 	if err != nil {
 		if client.IsErrNotFound(err) {
@@ -168,7 +170,8 @@ func StopContainerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	ctx := context.Background()
+	ctx, cancel := dockerCtx(r)
+	defer cancel()
 	// Stop container with default timeout
 	err = cli.ContainerStop(ctx, containerID, container.StopOptions{})
 	if err != nil {
@@ -202,7 +205,8 @@ func RestartContainerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	ctx := context.Background()
+	ctx, cancel := dockerCtx(r)
+	defer cancel()
 	err = cli.ContainerRestart(ctx, containerID, container.StopOptions{})
 	if err != nil {
 		if client.IsErrNotFound(err) {
@@ -251,7 +255,8 @@ func GetContainerLogsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cli.Close()
 
-	ctx := context.Background()
+	ctx, cancel := dockerCtx(r)
+	defer cancel()
 	options := container.LogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,

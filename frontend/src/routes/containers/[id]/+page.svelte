@@ -8,7 +8,7 @@
 	import LoadingSkeleton from '$lib/components/shared/LoadingSkeleton.svelte';
 	import PageHeader from '$lib/components/layout/PageHeader.svelte';
 
-	let id: string = $derived(page.params.id);
+	let id: string = $derived(page.params.id || '');
 	let detail: any = $state(null);
 	let logs: string[] = $state([]);
 	let loading = $state(true);

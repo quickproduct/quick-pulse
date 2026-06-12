@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"database/sql"
 	"encoding/json"
 	"net/http"
@@ -34,7 +33,6 @@ func GetDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	var m models.MetricSnapshot
 	var metricsPtr *models.MetricSnapshot
 	if hostPtr != nil {
-		var timeStr string
 		err = db.DB.QueryRow(`
 			SELECT cpu_percent, memory_percent, memory_used, memory_total, disk_percent,
 			       net_bytes_sent, net_bytes_recv, load_1m, load_5m, load_15m, process_count, uptime_seconds, time
@@ -44,11 +42,9 @@ func GetDashboardHandler(w http.ResponseWriter, r *http.Request) {
 			LIMIT 1
 		`, hostID).Scan(
 			&m.CPUPercent, &m.MemoryPercent, &m.MemoryUsed, &m.MemoryTotal, &m.DiskPercent,
-			&m.NetBytesSent, &m.NetBytesRecv, &m.Load1m, &m.Load5m, &m.Load15m, &m.ProcessCount, &m.UptimeSeconds, &timeStr,
+			&m.NetBytesSent, &m.NetBytesRecv, &m.Load1m, &m.Load5m, &m.Load15m, &m.ProcessCount, &m.UptimeSeconds, &m.Timestamp,
 		)
 		if err == nil {
-			t, _ := time.Parse("2006-01-02 15:04:05", timeStr)
-			m.Timestamp = t
 			metricsPtr = &m
 		}
 	}
@@ -60,7 +56,9 @@ func GetDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	cli, err := getDockerClient()
 	if err == nil {
 		defer cli.Close()
-		containers, err := cli.ContainerList(context.Background(), container.ListOptions{All: true})
+		ctx, cancel := dockerCtx(r)
+		defer cancel()
+		containers, err := cli.ContainerList(ctx, container.ListOptions{All: true})
 		if err == nil {
 			for _, c := range containers {
 				cName := ""
@@ -130,8 +128,8 @@ func GetDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		for rows.Next() {
 			var e models.EventResponse
 			var cID, cName, metadataStr sql.NullString
-			var timeStr string
-			err := rows.Scan(&e.ID, &cID, &cName, &e.EventType, &timeStr, &metadataStr)
+			var eventTime time.Time
+			err := rows.Scan(&e.ID, &cID, &cName, &e.EventType, &eventTime, &metadataStr)
 			if err == nil {
 				if cID.Valid {
 					e.ContainerDockerID = cID.String
@@ -139,8 +137,7 @@ func GetDashboardHandler(w http.ResponseWriter, r *http.Request) {
 				if cName.Valid {
 					e.ContainerName = cName.String
 				}
-				t, _ := time.Parse("2006-01-02 15:04:05", timeStr)
-				e.Timestamp = &t
+				e.Timestamp = &eventTime
 				if metadataStr.Valid && metadataStr.String != "" {
 					_ = json.Unmarshal([]byte(metadataStr.String), &e.Metadata)
 				}
