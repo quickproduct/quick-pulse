@@ -1,42 +1,21 @@
-# sv
+# QuickPulse Frontend
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+SvelteKit SPA for the QuickPulse control panel. Production deployment is handled by the root `Dockerfile`, which builds this frontend and embeds the generated static files into the Go backend binary.
 
-## Creating a project
+## Development
 
-If you're seeing this, you've probably already done this step. Congrats!
-
-```sh
-# create a new project
-npx sv create my-app
-```
-
-To recreate this project with the same configuration:
+Install dependencies and start the Vite dev server:
 
 ```sh
-# recreate this project
-npx sv@0.15.3 create --template minimal --types ts --no-install .
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
+npm install
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+The dev server proxies `/api` and `/ws` requests to `http://localhost:8000`, so run the Go backend separately during local development.
 
-To create a production version of your app:
+## Checks
 
 ```sh
+npm run check
 npm run build
 ```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
